@@ -24,7 +24,7 @@ while sleep 10; do
 		./compile_board.sh
 
 		cd "$WORKDIR"
-		EXECTIME=$(./run_board.sh)
+		EXECTIME=$("$REPODIR/run_board.sh")
 		cd "$REPODIR"
 
 		/home/root/wget --quiet --no-check-certificate \
