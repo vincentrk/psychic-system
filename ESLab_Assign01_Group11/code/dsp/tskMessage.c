@@ -28,6 +28,8 @@
 #include <helloDSP_config.h>
 #include <tskMessage.h>
 
+#define SIZE 12
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -42,7 +44,7 @@ Uint8 dspMsgQName[DSP_MAX_STRLEN];
 /* Number of iterations message transfers to be done by the application. */
 extern Uint16 numTransfers;
 
-void matMult(int mat1[SIZE][SIZE], int mat2[SIZE][SIZE], int prod[SIZE][SIZE]);
+
 /** ============================================================================
  *  @func   TSKMESSAGE_create
  *
@@ -138,9 +140,12 @@ Int TSKMESSAGE_create(TSKMESSAGE_TransferInfo** infoPtr)
 Int TSKMESSAGE_execute(TSKMESSAGE_TransferInfo* info)
 {
     Int status = SYS_OK;
-    ControlMsg* msg;
-    Uint32 i;
+    MatrixMsg* msg;
+    int mat1[SIZE][SIZE];
+    int mat2[SIZE][SIZE];
+    int prod[SIZE][SIZE];
 
+	
     /* Allocate and send the message */
     status = MSGQ_alloc(SAMPLE_POOL_ID, (MSGQ_Msg*) &msg, APP_BUFFER_SIZE);
 
@@ -158,71 +163,106 @@ Int TSKMESSAGE_execute(TSKMESSAGE_TransferInfo* info)
             MSGQ_free ((MSGQ_Msg) msg);
             SET_FAILURE_REASON(status);
         }
+	status = get_next_msg(info,msg);
+	if (status != SYS_OK)
+        {
+            /* Must free the message */
+            MSGQ_free ((MSGQ_Msg) msg);
+            SET_FAILURE_REASON(status);
+        }
+	/*We have a valid msg so process*/
+	mat1 = msg->arg;
+      	msg->command = 0x02;
+        SYS_sprintf("Received first matrix.");
+	status = send_msg(info,msg);
+	if (status != SYS_OK)
+        {
+            /* Must free the message */
+            MSGQ_free ((MSGQ_Msg) msg);
+            SET_FAILURE_REASON(status);
+        }
+	status = get_next_msg(info,msg);
+	if (status != SYS_OK)
+        {
+            /* Must free the message */
+            MSGQ_free ((MSGQ_Msg) msg);
+            SET_FAILURE_REASON(status);
+        }
+	/*We have a valid msg so process*/
+	mat2 = msg->arg;
+      	msg->command = 0x03;
+        SYS_sprintf("Received second matrix.");
+	matmult(mat1,mat2,prod);
+	msg->arg = prod;
+	status = send_msg(info,msg);
+        SYS_sprintf("Result sent");
+	if (status != SYS_OK)
+        {
+            /* Must free the message */
+            MSGQ_free ((MSGQ_Msg) msg);
+            SET_FAILURE_REASON(status);
+        }	
+	}
     }
     else
     {
         SET_FAILURE_REASON(status);
     }
 
-        /* Receive a message from the GPP */
-        status = MSGQ_get(info->localMsgq,(MSGQ_Msg*) &msg, SYS_FOREVER);
-        if (status == SYS_OK)
-        {
-            /* Check if the message is an asynchronous error message */
-            if (MSGQ_getMsgId((MSGQ_Msg) msg) == MSGQ_ASYNCERRORMSGID)
-            {
-#if !defined (LOG_COMPONENT)
-                LOG_printf(&trace, "Transport error Type = %d",((MSGQ_AsyncErrorMsg *) msg)->errorType);
-#endif
-                /* Must free the message */
-                MSGQ_free((MSGQ_Msg) msg);
-                status = SYS_EBADIO;
-                SET_FAILURE_REASON(status);
-            }
-            /* Check if the message received has the correct sequence number */
-            else if (MSGQ_getMsgId ((MSGQ_Msg) msg) != info->sequenceNumber)
-            {
-#if !defined (LOG_COMPONENT)
-                LOG_printf(&trace, "Out of sequence message!");
-#endif
-                MSGQ_free((MSGQ_Msg) msg);
-                status = SYS_EBADIO;
-                SET_FAILURE_REASON(status);
-            }
-            else
-            {
-		/* Include your control flag or processing code here */
-                msg->command = 0x02;
-                SYS_sprintf("Received a message will try multiplying the arguments");
-		int prod[msg->size][msg->size];
-		matMult(msg->mat1, msg->mat2, prod);
-		msg->mat1 = prod;
-                /* Increment the sequenceNumber for next received message */
-                info->sequenceNumber++;
-                /* Make sure that sequenceNumber stays within the range of iterations */
-                if (info->sequenceNumber == MSGQ_INTERNALIDSSTART)
-                {
-                    info->sequenceNumber = 0;
-                }
-                MSGQ_setMsgId((MSGQ_Msg) msg, info->sequenceNumber);
-                MSGQ_setSrcQueue((MSGQ_Msg) msg, info->localMsgq);
-
-                /* Send the message back to the GPP */
-                status = MSGQ_put(info->locatedMsgq,(MSGQ_Msg) msg);
-                if (status != SYS_OK)
-                {
-                    SET_FAILURE_REASON(status);
-                }
-            }
-        }
-        else
-        {
-            SET_FAILURE_REASON (status);
-        }
     
+     }
+     else
+     {
+         SET_FAILURE_REASON (status);
+     }
+    }
     return status;
 }
 
+Int send_msg(TSKMESSAGE_TransferInfo* info, MatrixMsg* msg){
+	/* Increment the sequenceNumber for next received message */
+        info->sequenceNumber++;
+        /* Make sure that sequenceNumber stays within the range of iterations */
+        if (info->sequenceNumber == MSGQ_INTERNALIDSSTART)
+        {
+           info->sequenceNumber = 0;
+        }
+        MSGQ_setMsgId((MSGQ_Msg) msg, info->sequenceNumber);
+        MSGQ_setSrcQueue((MSGQ_Msg) msg, info->localMsgq);
+        /* Send the message back to the GPP */
+        status = MSGQ_put(info->locatedMsgq,(MSGQ_Msg) msg);
+        return status;
+}
+
+Int get_next_msg(TSKMESSAGE_TransferInfo* info, MatrixMsg* msg){
+	/* Receive a message from the GPP */
+	Int status = SYS_OK;
+	Int status = MSGQ_get(info->localMsgq,(MSGQ_Msg*) &msg, SYS_FOREVER);
+	if (status == SYS_OK)
+	{
+		/* Check if the message is an asynchronous error message */
+		if (MSGQ_getMsgId((MSGQ_Msg) msg) == MSGQ_ASYNCERRORMSGID)
+	{
+#if !defined (LOG_COMPONENT)
+	       LOG_printf(&trace, "Transport error Type = %d",((MSGQ_AsyncErrorMsg *) msg)->errorType);
+#endif
+		/* Must free the message */
+		MSGQ_free((MSGQ_Msg) msg);
+		     status = SYS_EBADIO;
+		     SET_FAILURE_REASON(status);
+	 }
+	 /* Check if the message received has the correct sequence number */
+	 else if (MSGQ_getMsgId ((MSGQ_Msg) msg) != info->sequenceNumber)
+	 {
+	#if !defined (LOG_COMPONENT)
+	     LOG_printf(&trace, "Out of sequence message!");
+	#endif
+	     MSGQ_free((MSGQ_Msg) msg);
+	     status = SYS_EBADIO;
+	     SET_FAILURE_REASON(status);
+	 }
+	return status;
+}
 
 /** ============================================================================
  *  @func   TSKMESSAGE_delete
@@ -273,20 +313,6 @@ Int TSKMESSAGE_delete(TSKMESSAGE_TransferInfo* info)
         SET_FAILURE_REASON(status);
     }
     return status;
-}
-
-void matMult(int mat1[SIZE][SIZE], int mat2[SIZE][SIZE], int prod[SIZE][SIZE])
-{
-	int i, j, k;
-	for (i = 0;i < SIZE; i++)
-	{
-		for (j = 0; j < SIZE; j++)
-		{
-			prod[i][j]=0;
-			for(k=0;k<SIZE;k++)
-				prod[i][j] = prod[i][j]+mat1[i][k] * mat2[k][j];
-		}
-	}
 }
 
 

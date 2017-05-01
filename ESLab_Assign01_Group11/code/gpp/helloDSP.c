@@ -23,7 +23,6 @@
 
 #include <stdio.h>
 
-#define SIZE 32
 
 #if defined (__cplusplus)
 extern "C"
@@ -48,6 +47,8 @@ extern "C"
 #define NUMMSGINPOOL2   2
 #define NUMMSGINPOOL3   4
 
+#define MAT_SIZE 12
+
     /* Control message data structure. */
     /* Must contain a reserved space for the header */
     typedef struct ControlMsg
@@ -56,14 +57,11 @@ extern "C"
         Uint16 command;
         Char8 arg1[ARG_SIZE];
     } ControlMsg;
-
     typedef struct MatrixMsg
     {
         MSGQ_MsgHeader header;
         Uint16 command;
-        int mat1[SIZE];
-	int mat2[SIZE];
-	int size;
+        int arg1[MAT_SIZE];
     } MatrixMsg;
 
     /* Messaging buffer used by the application.
@@ -271,9 +269,7 @@ extern "C"
         Uint16 sequenceNumber = 0;
         Uint16 msgId = 0;
         Uint32 i;
-        ControlMsg *msg;
-	int mat1[SIZE][SIZE], mat2[SIZE][SIZE];
-	int i, j;
+        MatrixMsg *msg;
 
         SYSTEM_0Print("Entered helloDSP_Execute ()\n");
 
@@ -300,44 +296,15 @@ extern "C"
                 }
             }
 #endif
-		
+
             if (msg->command == 0x01){
-                SYSTEM_1Print("Message received: %s\n", (Uint32) msg->arg1);
-		    /*This should be the initial message i guess.. so create matrix and send it to dsp*/
-		    for (i = 0;i < SIZE; i++)
-		    {
-			for (j = 0; j < SIZE; j++)
-			{
-			 	mat1[i][j] = i+j*2;
-			}
-		    }
-	
-		    for(i = 0; i < SIZE; i++)
-		    {
-			for (j = 0; j < SIZE; j++)
-			{
-				mat2[i][j] = i+j*3;
-			}
-		    }
-		msg->mat1 = mat1;
-    		msg->mat2 = mat2;
-		msg->size = SIZE;
-
-                if (DSP_SUCCEEDED(status))
-                {
-                    msgId = MSGQ_getMsgId(msg);
-                    MSGQ_setMsgId(msg, msgId);
-                    status = MSGQ_put(SampleDspMsgq, (MsgqMsg) msg);
-                    if (DSP_FAILED(status))
-                    {
-                        MSGQ_free((MsgqMsg) msg);
-                        SYSTEM_1Print("MSGQ_put () failed. Status = [0x%x]\n", status);
-                    }
-                }
-	    }
-            else if (msg->command == 0x02)
-                SYSTEM_1Print("Message received: %s\n", (Uint32) msg->arg1);
-
+                SYSTEM_1Print("DSP is alive. Sending first matrix...");
+		}
+            else if (msg->command == 0x02){
+                SYSTEM_1Print("ACK for first matrix received. Sending second matrix...");
+		}else if(msg->command == 0x03){
+                SYSTEM_1Print("Result received.");
+		}
             /* If the message received is the final one, free it. */
             if ((numIterations != 0) && (i == (numIterations + 1)))
             {
