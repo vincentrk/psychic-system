@@ -14,8 +14,8 @@ fi
 mkdir "$WORKDIR"
 
 UPFILE="$WORKDIR/up.tar.gz"
-tar -czf "$UPFILE" "ESLab_Assign01_Group11/code/"*
-
+cd "ESLab_Assign01_Group11/code"
+tar -czf "$UPFILE" *
 cd "$WORKDIR"
 
 SERVERDIR="tmp/$UUID"
