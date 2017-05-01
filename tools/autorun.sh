@@ -23,7 +23,7 @@ while sleep 10; do
 		export WORKDIR="/tmp/autotest"
 		./compile_board.sh
 
-		EXECTIME=$(./run_board.sh)
+		EXECTIME=$(./run_board.sh 2>&1)
 
 		/home/root/wget --quiet --no-check-certificate \
 				--post-data="beaglebranch=$BRANCH&beaglecommit=$COMMIT&beagleresult=$EXECTIME" \
