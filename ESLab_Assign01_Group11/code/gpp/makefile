@@ -2,7 +2,7 @@ CC=gcc
 CFLAGS= -O3 -Wall
 LIBS= -lm
 LDFLAGS=
-EXEC = matMult
+EXEC = matMult.exe
 CSRCS = matrixmult.c Timer.c
 OBJS = $(CSRCS:.c=.o)
 
