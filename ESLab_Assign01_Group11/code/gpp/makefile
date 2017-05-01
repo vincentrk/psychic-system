@@ -1,17 +1,16 @@
 CC=gcc
-# Use the following (instead of gcc) for arm compiler on ES Lab Server
-# CC=/opt/bbToolChain/usr/local/share/codesourcery/bin/arm-none-linux-gnueabi-gcc
 CFLAGS= -O3 -Wall
 LIBS= -lm
 LDFLAGS=
-EXEC = matMult
+EXEC = matMult.exe
 CSRCS = matrixmult.c Timer.c
 OBJS = $(CSRCS:.c=.o)
 
-# make sure following dir exists on beagleboard
-BEAGLE_DIR=/home/root/esLAB/matMULT
-
 all: $(EXEC)
+
+board:
+	CC=/opt/bbToolChain/usr/local/share/codesourcery/bin/arm-none-linux-gnueabi-gcc
+board: all
 
 $(EXEC): $(OBJS)
 	$(CC) $(CFLAGS)  -o $@ $? $(LIBS) $(LDFLAGS)
@@ -25,8 +24,4 @@ run: $(EXEC)
 clean:
 	@-rm -rf $(EXEC) $(OBJS) *~
 
-send: $(EXEC)
-	echo "Sending $(EXEC) to beagleboard ... "
-	scp $(EXEC) root@192.168.0.202:$(BEAGLE_DIR)/.
-
-.PHONY: all run clean send
+.PHONY: all board run clean
