@@ -8,8 +8,7 @@ OBJS = $(CSRCS:.c=.o)
 
 all: $(EXEC)
 
-board:
-	CC=/opt/bbToolChain/usr/local/share/codesourcery/bin/arm-none-linux-gnueabi-gcc
+board: CC=/opt/bbToolChain/usr/local/share/codesourcery/bin/arm-none-linux-gnueabi-gcc
 board: all
 
 $(EXEC): $(OBJS)
