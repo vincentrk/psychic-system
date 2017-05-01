@@ -8,9 +8,6 @@ EXEC = matMult
 CSRCS = matrixmult.c Timer.c
 OBJS = $(CSRCS:.c=.o)
 
-# make sure following dir exists on beagleboard
-BEAGLE_DIR=/home/root/esLAB/matMULT
-
 all: $(EXEC)
 
 $(EXEC): $(OBJS)
@@ -25,8 +22,4 @@ run: $(EXEC)
 clean:
 	@-rm -rf $(EXEC) $(OBJS) *~
 
-send: $(EXEC)
-	echo "Sending $(EXEC) to beagleboard ... "
-	scp $(EXEC) root@192.168.0.202:$(BEAGLE_DIR)/.
-
-.PHONY: all run clean send
+.PHONY: all run clean
