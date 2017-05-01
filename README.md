@@ -3,14 +3,15 @@ TU Delft IN4342 - Embedded Systems Lab
 
 ## Members
 
-Aniket Dhar
+[Aniket Dhar](https://github.com/AniketDhar)
 
-Anirudh Bisht
+[Anirudh Bisht](https://github.com/Xiferof)
 
-Lars Wijtemans
+[Lars Wijtemans](https://github.com/lars2309)
 
-Philip Dürnay
+[Philip Dürnay](https://github.com/phil-due)
 
-Sergio Soto
+[Sergio Soto](https://github.com/bajosoto)
 
-Vincent Koeten
+[Vincent Koeten](https://github.com/vincentrk)
+
