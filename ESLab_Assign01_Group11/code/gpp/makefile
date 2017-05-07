@@ -12,7 +12,7 @@ board: CC=/opt/bbToolChain/usr/local/share/codesourcery/bin/arm-none-linux-gnuea
 board: all
 
 $(EXEC): $(OBJS)
-	$(CC) $(CFLAGS)  -o $@ $? $(LIBS) $(LDFLAGS)
+	$(CC) $(CFLAGS)  -o $@ $(OBJS) $(LIBS) $(LDFLAGS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
