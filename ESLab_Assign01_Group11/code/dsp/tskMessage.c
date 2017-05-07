@@ -10,7 +10,7 @@
  *  @ver    1.10
  */
 
-
+#include <stdio.h>
 /*  ----------------------------------- DSP/BIOS Headers            */
 #include "helloDSPcfg.h"
 #include <gbl.h>
@@ -44,6 +44,8 @@ Uint8 dspMsgQName[DSP_MAX_STRLEN];
 /* Number of iterations message transfers to be done by the application. */
 extern Uint16 numTransfers;
 
+Int send_msg(TSKMESSAGE_TransferInfo* info, MatrixMsg* msg);
+Int get_next_msg(TSKMESSAGE_TransferInfo* info, MatrixMsg* msg);
 
 /** ============================================================================
  *  @func   TSKMESSAGE_create
@@ -141,9 +143,9 @@ Int TSKMESSAGE_execute(TSKMESSAGE_TransferInfo* info)
 {
     Int status = SYS_OK;
     MatrixMsg* msg;
-    int mat1[SIZE][SIZE];
-    int mat2[SIZE][SIZE];
-    int prod[SIZE][SIZE];
+    int **mat1;
+    int **mat2;
+    int **prod;
 
 	
     /* Allocate and send the message */
@@ -154,7 +156,7 @@ Int TSKMESSAGE_execute(TSKMESSAGE_TransferInfo* info)
         MSGQ_setMsgId((MSGQ_Msg) msg, info->sequenceNumber);
         MSGQ_setSrcQueue((MSGQ_Msg) msg, info->localMsgq);
         msg->command = 0x01;
-        SYS_sprintf(msg->arg1, "DSP is awake!");
+        printf("DSP is awake!\n");
 
         status = MSGQ_put(info->locatedMsgq, (MSGQ_Msg) msg);
         if (status != SYS_OK)
@@ -173,7 +175,7 @@ Int TSKMESSAGE_execute(TSKMESSAGE_TransferInfo* info)
 	/*We have a valid msg so process*/
 	mat1 = msg->arg;
       	msg->command = 0x02;
-        SYS_sprintf("Received first matrix.");
+        printf("Received first matrix.\n");
 	status = send_msg(info,msg);
 	if (status != SYS_OK)
         {
@@ -191,11 +193,11 @@ Int TSKMESSAGE_execute(TSKMESSAGE_TransferInfo* info)
 	/*We have a valid msg so process*/
 	mat2 = msg->arg;
       	msg->command = 0x03;
-        SYS_sprintf("Received second matrix.");
+        printf("Received second matrix.\n");
 	matmult(mat1,mat2,prod);
 	msg->arg = prod;
 	status = send_msg(info,msg);
-        SYS_sprintf("Result sent");
+        printf("Result sent\n");
 	if (status != SYS_OK)
         {
             /* Must free the message */
