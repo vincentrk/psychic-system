@@ -1,5 +1,7 @@
 CC=gcc
-CFLAGS= -O3 -Wall
+
+# -fdump-tree-optimized to see optimized code
+CFLAGS= -O3 -Wall -fdump-tree-optimized
 LIBS= -lm
 LDFLAGS=
 EXEC = matMult.exe
