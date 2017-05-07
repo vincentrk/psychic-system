@@ -44,6 +44,7 @@ Uint8 dspMsgQName[DSP_MAX_STRLEN];
 /* Number of iterations message transfers to be done by the application. */
 extern Uint16 numTransfers;
 
+void matMult(int mat1[SIZE][SIZE], int mat2[SIZE][SIZE], int prod[SIZE][SIZE])
 Int send_msg(TSKMESSAGE_TransferInfo* info, MatrixMsg* msg);
 Int get_next_msg(TSKMESSAGE_TransferInfo* info, MatrixMsg* msg);
 
@@ -315,6 +316,20 @@ Int TSKMESSAGE_delete(TSKMESSAGE_TransferInfo* info)
         SET_FAILURE_REASON(status);
     }
     return status;
+}
+
+void matMult(int mat1[SIZE][SIZE], int mat2[SIZE][SIZE], int prod[SIZE][SIZE])
+{
+	int i, j, k;
+	for (i = 0;i < SIZE; i++)
+	{
+		for (j = 0; j < SIZE; j++)
+		{
+			prod[i][j]=0;
+			for(k=0;k<SIZE;k++)
+				prod[i][j] = prod[i][j]+mat1[i][k] * mat2[k][j];
+		}
+	}
 }
 
 
