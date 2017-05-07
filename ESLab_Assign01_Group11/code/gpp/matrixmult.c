@@ -47,14 +47,13 @@ int main(int argc, char * argv[])
 	int * matrix2_trans = malloc(matrix_size * matrix_size * sizeof(int));
 	if (matrix2_trans == NULL) {
 		fprintf(stderr, "Could not allocate memory for transpose matrix\n");
-		free(matrix1);
-		free(matrix2);
-		free(matrix_product);
-		return -1;
+		matrix2_trans = matrix2;
 	}
 	matTranspose(matrix_size, matrix2, matrix2_trans);
 	matMult(matrix_size, matrix1, matrix2_trans, matrix_product);
-	free(matrix2_trans);
+	if (matrix2_trans != matrix2) {
+		free(matrix2_trans);
+	}
 
 	stopTimer(&totalTime);
 	printTimer(&totalTime);	
@@ -77,9 +76,21 @@ void matTranspose(int size, int * mat, int * trans)
 {
 	int i, j;
 
-	for (i = 0; i < size; i++) {
-		for (j = 0; j < size; j++) {
-			trans[i * size + j] = mat[j * size + i];
+	if (trans == mat) {
+		// transpose in-place
+		for (i = 0; i < size; i++) {
+			for (j = i+1; j < size; j++) {
+				int tmp = mat[i * size + j];
+				mat[i * size + j] = mat[j * size + i];
+				mat[j * size + i] = tmp;
+			}
+		}
+	} else {
+		// transpose copy
+		for (i = 0; i < size; i++) {
+			for (j = 0; j < size; j++) {
+				trans[i * size + j] = mat[j * size + i];
+			}
 		}
 	}
 }
