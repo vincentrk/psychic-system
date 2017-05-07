@@ -4,6 +4,7 @@
 #define MATRIX_SIZE_DEFAULT 128
 
 void matMult(int size, int * mat1, int * mat2, int * product);
+void matTranspose(int size, int * mat, int * trans);
 
 int main(int argc, char * argv[])
 {
@@ -20,7 +21,7 @@ int main(int argc, char * argv[])
 	int * matrix_product = malloc(matrix_size * matrix_size * sizeof(int));
 
 	if (matrix1 == NULL || matrix2 == NULL || matrix_product == NULL) {
-		fprintf(stderr, "Could not allocate memory\n");
+		fprintf(stderr, "Could not allocate memory for matrix\n");
 		free(matrix1);
 		free(matrix2);
 		free(matrix_product);
@@ -42,7 +43,19 @@ int main(int argc, char * argv[])
 	}
 
 	startTimer(&totalTime);
-	matMult(matrix_size, matrix1, matrix2, matrix_product);
+
+	int * matrix2_trans = malloc(matrix_size * matrix_size * sizeof(int));
+	if (matrix2_trans == NULL) {
+		fprintf(stderr, "Could not allocate memory for transpose matrix\n");
+		free(matrix1);
+		free(matrix2);
+		free(matrix_product);
+		return -1;
+	}
+	matTranspose(matrix_size, matrix2, matrix2_trans);
+	matMult(matrix_size, matrix1, matrix2_trans, matrix_product);
+	free(matrix2_trans);
+
 	stopTimer(&totalTime);
 	printTimer(&totalTime);	
 
@@ -60,6 +73,18 @@ int main(int argc, char * argv[])
 	return 0;
 }
 
+void matTranspose(int size, int * mat, int * trans)
+{
+	int i, j;
+
+	for (i = 0; i < size; i++) {
+		for (j = 0; j < size; j++) {
+			trans[i * size + j] = mat[j * size + i];
+		}
+	}
+}
+
+// mat2 must be transposed
 void matMult(int size, int * mat1, int * mat2, int * prod)
 {
 	if (size < 1) {
@@ -72,7 +97,7 @@ void matMult(int size, int * mat1, int * mat2, int * prod)
 			int sum = 0;
 			//prod[i * size + j] = 0;
 			for(k = 0; k < size; k++) {
-				sum += mat1[i * size + k] * mat2[k * size + j];
+				sum += mat1[i * size + k] * mat2[j * size + k];
 			}
 			prod[i * size + j] = sum;
 		}
