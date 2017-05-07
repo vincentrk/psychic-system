@@ -62,13 +62,19 @@ int main(int argc, char * argv[])
 
 void matMult(int size, int * mat1, int * mat2, int * prod)
 {
+	if (size < 1) {
+		return;
+	}
+
 	int i, j, k;
 	for (i = 0; i < size; i++) {
 		for (j = 0; j < size; j++) {
-			prod[i * size + j] = 0;
+			int sum = 0;
+			//prod[i * size + j] = 0;
 			for(k = 0; k < size; k++) {
-				prod[i * size + j] += mat1[i * size + k] * mat2[k * size + j];
+				sum += mat1[i * size + k] * mat2[k * size + j];
 			}
+			prod[i * size + j] = sum;
 		}
 	}
 }
