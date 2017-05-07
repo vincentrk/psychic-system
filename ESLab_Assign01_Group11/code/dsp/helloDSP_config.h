@@ -54,6 +54,13 @@ typedef struct ControlMsg
     Char arg1[ARG_SIZE];
 } ControlMsg;
 
+typedef struct MatrixMsg 
+{
+    MSGQ_MsgHeader header;
+    Uint16 command;
+    int arg1[ARG_SIZE];
+} ControlMsg;
+
 /* Messaging buffer used by the application.
  * Note: This buffer must be aligned according to the alignment expected
  * by the device/platform. */
