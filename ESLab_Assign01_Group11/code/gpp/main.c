@@ -28,18 +28,20 @@ int main(int argc, char** argv)
 	printf("Starting sequential program...\n");
 
 	// SEQUENTIAL VERSION START
+
+	int matrix_size = argv[2];
 	
-	for (i = 0;i < SIZE; i++)
+	for (i = 0;i < matrix_size; i++)
 	{
-		for (j = 0; j < SIZE; j++)
+		for (j = 0; j < matrix_size; j++)
 		{
 			mat1[i][j] = i+j*2;
 		}
 	}
 	
-	for(i = 0; i < SIZE; i++)
+	for(i = 0; i < matrix_size; i++)
 	{
-		for (j = 0; j < SIZE; j++)
+		for (j = 0; j < matrix_size; j++)
 		{
 			mat2[i][j] = i+j*3;
 		}
@@ -50,10 +52,10 @@ int main(int argc, char** argv)
     stopTimer(&totalTime);
     printTimer(&totalTime);	
 
-	for (i = 0;i < SIZE; i++)
+	for (i = 0;i < matrix_size; i++)
 	{
 		printf("\n");
-		for (j = 0; j < SIZE; j++)
+		for (j = 0; j < matrix_size; j++)
 		{
 			printf("\t%d ", prod[i][j]);
 		}
@@ -74,14 +76,14 @@ int main(int argc, char** argv)
 	}
 	else {
 		dspExecutable = argv[1];
-		accelMult(dspExecutable, mat1, mat2, prodAccel);
+		accelMult(dspExecutable,argv[2], mat1, mat2, prodAccel);
 		printf("\nAccelerated done!\n");
 	}
 	// print accel results
-	for (i = 0;i < SIZE; i++)
+	for (i = 0;i < matrix_size; i++)
 	{
 		printf("\n");
-		for (j = 0; j < SIZE; j++)
+		for (j = 0; j < matrix_size; j++)
 		{
 			printf("\t%d ", prodAccel[i][j]);
 		}
