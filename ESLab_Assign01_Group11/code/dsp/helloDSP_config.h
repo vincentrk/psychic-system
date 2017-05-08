@@ -44,7 +44,8 @@ extern "C" {
 
 /* Argument size passed to the control message queue */
 #define ARG_SIZE 256
-#define MAT_SIZE 16
+#define ROW_SIZE 16
+#define COL_SIZE ROW_SIZE
 
 /* Control message data structure. */
 /* Must contain a reserved space for the header */
@@ -53,7 +54,7 @@ typedef struct ControlMsg
     MSGQ_MsgHeader header;
     Uint16 command;
     Char arg1[ARG_SIZE];
-    Uint32 mat[MAT_SIZE];
+    Uint32 mat[ROW_SIZE][COL_SIZE];
 } ControlMsg;
 
 /* Messaging buffer used by the application.

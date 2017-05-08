@@ -34,7 +34,8 @@ extern "C"
 
     /* Argument size passed to the control message queue */
 #define ARG_SIZE 256
-#define MAT_SIZE 16
+#define ROW_SIZE 16
+#define COL_SIZE ROW_SIZE
 
     /* ID of the POOL used by helloDSP. */
 #define SAMPLE_POOL_ID  0
@@ -50,13 +51,13 @@ extern "C"
 
     /* Control message data structure. */
     /* Must contain a reserved space for the header */
-    typedef struct ControlMsg
-    {
-        MSGQ_MsgHeader header;
-        Uint16 command;
-        Char8 arg1[ARG_SIZE];
-	Uint32 mat[MAT_SIZE];
-    } ControlMsg;
+    typedef struct ControlMsg 
+{
+    MSGQ_MsgHeader header;
+    Uint16 command;
+    Char arg1[ARG_SIZE];
+    Uint32 mat[ROW_SIZE][COL_SIZE];
+} ControlMsg;
 
     /* Messaging buffer used by the application.
      * Note: This buffer must be aligned according to the alignment expected
@@ -265,7 +266,7 @@ extern "C"
         Uint32 i;
         ControlMsg *msg;
 	Uint32 prod[ARG_SIZE][ARG_SIZE];
-	Uint8 line, j;
+	Uint8 row, col;
         SYSTEM_0Print("Entered helloDSP_Execute ()\n");
 
 #if defined (PROFILE)
@@ -308,11 +309,14 @@ extern "C"
                 /* Send the same message received in earlier MSGQ_get () call. */
                 if (DSP_SUCCEEDED(status))
                 {
-                    for (j = 0; j < MAT_SIZE; j++)
+                    for (row = 0;i < ROW_SIZE; i++)
 		    {
-			msg->mat[j] = numIterations+j*2;
+			for (col = 0; j < COL_SIZE; j++)
+			{
+				mat1[i][j] = i+j*2;
+			}
 		    }
-		    SYSTEM_1Print("Created row [%d] sending", numIterations);
+		    SYSTEM_1Print("Created first matrix sending", numIterations);
 		    msgId = MSGQ_getMsgId(msg);
                     MSGQ_setMsgId(msg, msgId);
                     status = MSGQ_put(SampleDspMsgq, (MsgqMsg) msg);
