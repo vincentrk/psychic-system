@@ -41,13 +41,13 @@ DSPLINK := /opt/bbToolChain/usr/local/share/bbframework/platform/beagle-linux/to
 #   ----------------------------------------------------------------------------
 #   General options, sources and libraries
 #   ----------------------------------------------------------------------------
-SRCS := main.c system_os.c Timer.c matrixmult.c
+SRCS := helloDSP.c system_os.c main.c
 OBJS :=
 DEBUG :=
 LDFLAGS := -lpthread
 CFLAGS := -DPROFILE
 LIBS :=
-BIN := matrixMult
+BIN := helloDSPgpp
 
 #   ----------------------------------------------------------------------------
 #   Compiler and Linker flags for Debug
