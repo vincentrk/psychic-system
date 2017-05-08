@@ -113,7 +113,7 @@ extern "C"
 
 
 
-NORMAL_API Void accelMult(Char8* dspExecutable, int mat1[SIZE][SIZE], int mat2[SIZE][SIZE], int prod[SIZE][SIZE]){
+NORMAL_API Void accelMult(Char8* dspExecutable,int size, int * mat1, int * mat2, int * prod){
 	DSP_STATUS status = DSP_SOK;
 	Uint8 processorId = 0;
 
@@ -267,7 +267,7 @@ NORMAL_API DSP_STATUS accelMult_Create(Char8* dspExecutable, Uint8 processorId) 
 //   ----------------------------------------------------------------------------
 //   Execute
 //   ----------------------------------------------------------------------------
-NORMAL_API DSP_STATUS accelMult_Execute(Uint8 processorId, int mat1[SIZE][SIZE], int mat2[SIZE][SIZE], int prod[SIZE][SIZE]) {
+NORMAL_API DSP_STATUS accelMult_Execute(Uint8 processorId,int size, int * mat1, int * mat2, int * prod) {
 	DSP_STATUS  status = DSP_SOK;
     Uint16 sequenceNumber = 0;
     Uint16 msgId = 0;
@@ -284,7 +284,7 @@ NORMAL_API DSP_STATUS accelMult_Execute(Uint8 processorId, int mat1[SIZE][SIZE],
     // this
     // guarantees that we will at least wait for one message
     // In total we expect a total of SIZE * SIZE messages plus the first one from DSP
-    for (i = -1 ; (i < (SIZE * SIZE)) && (DSP_SUCCEEDED (status)); i++)
+    for (i = -1 ; (i < (size * size)) && (DSP_SUCCEEDED (status)); i++)
     {
         /* Receive the message. */
         status = MSGQ_get(SampleGppMsgq, WAIT_FOREVER, (MsgqMsg *) &msg);
@@ -313,17 +313,17 @@ NORMAL_API DSP_STATUS accelMult_Execute(Uint8 processorId, int mat1[SIZE][SIZE],
         	// it's waiting for the DSP to send something...
             result = 0;
             int p = 0;
-            for(p = 0; p < SIZE; p++){
+            for(p = 0; p < size; p++){
                 SYSTEM_1Print("%d ", msg->arg1[p]);
             	result += msg->arg1[p];
             }
             SYSTEM_0Print("\n");
             // Safe because first message (i.e. i=-1) is 0x01
-        	prod[i%SIZE][i/SIZE] = result; 
+        	prod[i%size][i/size] = result; 
         }
 
         /* If the message received is the final one, free it. */
-        if (i == SIZE * SIZE - 1)
+        if (i == size * size - 1)
         {
         	SYSTEM_0Print("Last message received.\n");
             MSGQ_free((MsgqMsg) msg);
@@ -351,23 +351,23 @@ NORMAL_API DSP_STATUS accelMult_Execute(Uint8 processorId, int mat1[SIZE][SIZE],
                 // x = (i) % SIZE
                 // y = (i) / SIZE
                 int p = 0;
-                for (p = 0; p < SIZE; p++) {
-                	msg->arg1[p] = mat1[(i+1) % SIZE][p];
-                	msg->arg2[p] = mat2[p][(i+1) / SIZE];
+                for (p = 0; p < size; p++) {
+                	msg->arg1[p] = mat1[(i+1) % size][p];
+                	msg->arg2[p] = mat2[p][(i+1) / size];
                 }
 
                 // Print what we are sending
                 SYSTEM_0Print("Sending:\n");
-                for(p = 0; p < SIZE; p++){
+                for(p = 0; p < size; p++){
                     SYSTEM_1Print("%d ", msg->arg1[p]);
                     result += msg->arg1[p];
                 }
                 SYSTEM_0Print("\n");
-                for(p = 0; p < SIZE; p++){
+                for(p = 0; p < size; p++){
                     SYSTEM_1Print("%d ", msg->arg2[p]);
                 }
                 SYSTEM_0Print("\nExpecting: \n");
-                for(p = 0; p < SIZE; p++){
+                for(p = 0; p < size; p++){
                     SYSTEM_1Print("%d ", msg->arg1[p] * msg->arg2[p]);
                 }
                 SYSTEM_0Print("\n");

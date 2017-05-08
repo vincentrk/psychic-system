@@ -1,9 +1,7 @@
 #if !defined (MATRIXMULT_H)
 #define MATRIXMULT_H
 
-
-#define SIZE 16
-
+MATRIX_SIZE_DEFAULT 128
 
 #if defined (__cplusplus)
 extern "C"
