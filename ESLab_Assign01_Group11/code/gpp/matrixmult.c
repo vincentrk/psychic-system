@@ -206,7 +206,7 @@ NORMAL_API DSP_STATUS accelMult_Create(Char8* dspExecutable, Uint8 processorId) 
     /* Load the executable on the DSP. */
     if (DSP_SUCCEEDED(status))
     {
-        args [0] = "16";
+        args [0] = itoa(matrix_size);
         {
             status = PROC_load(processorId, dspExecutable, numArgs, args);
         }

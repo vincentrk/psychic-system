@@ -28,15 +28,15 @@ int main(int argc, char** argv)
 
     // prodAccel will hold the result from the accelerated algorithm
 	
-	int * matrix1 = malloc(matrix_size * matrix_size * sizeof(int));
-	int * matrix2 = malloc(matrix_size * matrix_size * sizeof(int));
-	int * matrix_product = malloc(matrix_size * matrix_size * sizeof(int));
+	int * mat1 = malloc(matrix_size * matrix_size * sizeof(int));
+	int * mat2 = malloc(matrix_size * matrix_size * sizeof(int));
+	int * prod = malloc(matrix_size * matrix_size * sizeof(int));
 
-	if (matrix1 == NULL || matrix2 == NULL || matrix_product == NULL) {
+	if (mat1 == NULL || mat2 == NULL || prod == NULL) {
 		fprintf(stderr, "Could not allocate memory\n");
-		free(matrix1);
-		free(matrix2);
-		free(matrix_product);
+		free(mat1);
+		free(mat2);
+		free(prod);
 		return -1;
 	}
 
@@ -50,7 +50,7 @@ int main(int argc, char** argv)
 	{
 		for (j = 0; j < matrix_size; j++)
 		{
-			mat1[i][j] = i+j*2;
+			mat1[i*matrix_size+j] = i+j*2;			
 		}
 	}
 	
@@ -58,7 +58,7 @@ int main(int argc, char** argv)
 	{
 		for (j = 0; j < matrix_size; j++)
 		{
-			mat2[i][j] = i+j*3;
+			mat2[i*matrix_size+j] = i+j*3;
 		}
 	}
 
@@ -72,7 +72,7 @@ int main(int argc, char** argv)
 		printf("\n");
 		for (j = 0; j < matrix_size; j++)
 		{
-			printf("\t%d ", prod[i][j]);
+			printf("\t%d ", prod[i*matrix_size+j]);
 		}
 	}
 	
@@ -87,11 +87,11 @@ int main(int argc, char** argv)
 
 	// Check for executable path
 	if (argc < 2) {
-		printf("Usage : %s <absolute path of DSP executable>\n", (int) argv[0]);
+		printf("Usage : %s <absolute path of DSP executable>\n", argv[0]);
 	}
 	else {
 		dspExecutable = argv[1];
-		accelMult(dspExecutable,matrix_size, mat1, mat2, prodAccel);
+		accelMult(dspExecutable,matrix_size, mat1, mat2, prod);
 		printf("\nAccelerated done!\n");
 	}
 	// print accel results
@@ -100,7 +100,7 @@ int main(int argc, char** argv)
 		printf("\n");
 		for (j = 0; j < matrix_size; j++)
 		{
-			printf("\t%d ", prodAccel[i][j]);
+			printf("\t%d ", prod[i*matrix_size+j]);
 		}
 	}
 
@@ -120,9 +120,9 @@ void matMult(int size, int * mat1, int * mat2, int * prod)
 	{
 		for (j = 0; j < size; j++)
 		{
-			prod[i][j]=0;
+			prod[i*size+j]=0;
 			for(k=0;k<size;k++)
-				prod[i][j] = prod[i][j]+mat1[i][k] * mat2[k][j];
+				prod[i*size+j] = prod[i*size+j]+mat1[i*size+k] * mat2[k*size+j];
 		}
 	}
 }
