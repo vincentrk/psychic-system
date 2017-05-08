@@ -34,6 +34,7 @@ extern "C"
 
     /* Argument size passed to the control message queue */
 #define ARG_SIZE 256
+#define MAT_SIZE 16
 
     /* ID of the POOL used by helloDSP. */
 #define SAMPLE_POOL_ID  0
@@ -54,7 +55,7 @@ extern "C"
         MSGQ_MsgHeader header;
         Uint16 command;
         Char8 arg1[ARG_SIZE];
-	Uint32 mat[ARG_SIZE];
+	Uint32 mat[MAT_SIZE];
     } ControlMsg;
 
     /* Messaging buffer used by the application.
@@ -307,7 +308,7 @@ extern "C"
                 /* Send the same message received in earlier MSGQ_get () call. */
                 if (DSP_SUCCEEDED(status))
                 {
-                    for (j = 0; j < ARG_SIZE; j++)
+                    for (j = 0; j < MAT_SIZE; j++)
 		    {
 			msg->mat[j] = numIterations+j*2;
 		    }
