@@ -262,7 +262,8 @@ extern "C"
         Uint16 msgId = 0;
         Uint32 i;
         ControlMsg *msg;
-
+	int mat1[SIZE][SIZE], mat2[SIZE][SIZE], prod[SIZE][SIZE];
+	int line, j;
         SYSTEM_0Print("Entered helloDSP_Execute ()\n");
 
 #if defined (PROFILE)
@@ -292,7 +293,27 @@ extern "C"
             if (msg->command == 0x01)
                 SYSTEM_1Print("Message received: %s\n", (Uint32) msg->arg1);
             else if (msg->command == 0x02)
-                SYSTEM_1Print("Message received: %s\n", (Uint32) msg->arg1);
+                /* Send a vector and see if it is printed correctly. */
+		SYSTEM_1Print("Message received: %s\n", (Uint32) msg->arg1);
+                if (DSP_SUCCEEDED(status))
+                {
+                    msgId = MSGQ_getMsgId(msg);
+                    MSGQ_setMsgId(msg, msgId);
+	
+		line = 0;	
+		for (j = 0; j < SIZE; j++)
+		{
+			mat1[line][j] = line+j*2;
+		}
+		msg->arg1 = mat1[line];
+	
+                    status = MSGQ_put(SampleDspMsgq, (MsgqMsg) msg);
+                    if (DSP_FAILED(status))
+                    {
+                        MSGQ_free((MsgqMsg) msg);
+                        SYSTEM_1Print("MSGQ_put () failed. Status = [0x%x]\n", status);
+                    }
+                }
 
             /* If the message received is the final one, free it. */
             if ((numIterations != 0) && (i == (numIterations + 1)))
