@@ -53,7 +53,7 @@ extern "C"
     {
         MSGQ_MsgHeader header;
         Uint16 command;
-        Char8 arg1[ARG_SIZE];
+        Uint32 arg1[ARG_SIZE];
     } ControlMsg;
 
     /* Messaging buffer used by the application.
@@ -262,8 +262,8 @@ extern "C"
         Uint16 msgId = 0;
         Uint32 i;
         ControlMsg *msg;
-	int mat1[SIZE][SIZE], mat2[SIZE][SIZE], prod[SIZE][SIZE];
-	int line, j;
+	Uint32 prod[ARG_SIZE][ARG_SIZE];
+	Uint8 line, j;
         SYSTEM_0Print("Entered helloDSP_Execute ()\n");
 
 #if defined (PROFILE)
@@ -300,13 +300,12 @@ extern "C"
                     msgId = MSGQ_getMsgId(msg);
                     MSGQ_setMsgId(msg, msgId);
 	
-		line = 0;	
-		for (j = 0; j < SIZE; j++)
+		line = 0;
+		for (j = 0; j < ARG_SIZE; j++)
 		{
-			mat1[line][j] = line+j*2;
+			msg->arg1[j] = line+j*2;
 		}
-		msg->arg1 = mat1[line];
-	
+			
                     status = MSGQ_put(SampleDspMsgq, (MsgqMsg) msg);
                     if (DSP_FAILED(status))
                     {
