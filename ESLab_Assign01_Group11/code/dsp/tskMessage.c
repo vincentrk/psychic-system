@@ -42,7 +42,7 @@ Uint8 dspMsgQName[DSP_MAX_STRLEN];
 /* Number of iterations message transfers to be done by the application. */
 extern Uint16 numTransfers;
 
-void matMult(int mat1[SIZE][SIZE], int mat2[SIZE][SIZE], int prod[SIZE][SIZE]);
+
 /** ============================================================================
  *  @func   TSKMESSAGE_create
  *
@@ -164,6 +164,10 @@ Int TSKMESSAGE_execute(TSKMESSAGE_TransferInfo* info)
         SET_FAILURE_REASON(status);
     }
 
+    /* Execute the loop for the configured number of transfers  */
+    /* A value of 0 in numTransfers implies infinite iterations */
+    for (i = 0; (((info->numTransfers == 0) || (i < info->numTransfers)) && (status == SYS_OK)); i++)
+    {
         /* Receive a message from the GPP */
         status = MSGQ_get(info->localMsgq,(MSGQ_Msg*) &msg, SYS_FOREVER);
         if (status == SYS_OK)
@@ -193,10 +197,8 @@ Int TSKMESSAGE_execute(TSKMESSAGE_TransferInfo* info)
             {
 		/* Include your control flag or processing code here */
                 msg->command = 0x02;
-                SYS_sprintf("Received a message will try multiplying the arguments");
-		int prod[msg->size][msg->size];
-		matMult(msg->mat1, msg->mat2, prod);
-		msg->mat1 = prod;
+                SYS_sprintf(msg->arg1, "Iteration %d is complete.", i);
+
                 /* Increment the sequenceNumber for next received message */
                 info->sequenceNumber++;
                 /* Make sure that sequenceNumber stays within the range of iterations */
@@ -219,7 +221,7 @@ Int TSKMESSAGE_execute(TSKMESSAGE_TransferInfo* info)
         {
             SET_FAILURE_REASON (status);
         }
-    
+    }
     return status;
 }
 
@@ -273,20 +275,6 @@ Int TSKMESSAGE_delete(TSKMESSAGE_TransferInfo* info)
         SET_FAILURE_REASON(status);
     }
     return status;
-}
-
-void matMult(int mat1[SIZE][SIZE], int mat2[SIZE][SIZE], int prod[SIZE][SIZE])
-{
-	int i, j, k;
-	for (i = 0;i < SIZE; i++)
-	{
-		for (j = 0; j < SIZE; j++)
-		{
-			prod[i][j]=0;
-			for(k=0;k<SIZE;k++)
-				prod[i][j] = prod[i][j]+mat1[i][k] * mat2[k][j];
-		}
-	}
 }
 
 
