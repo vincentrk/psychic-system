@@ -311,6 +311,7 @@ extern "C"
 		    {
 			msg->mat[j] = numIterations+j*2;
 		    }
+		    SYSTEM_1Print("Created row [%d] sending", numIterations);
 		    msgId = MSGQ_getMsgId(msg);
                     MSGQ_setMsgId(msg, msgId);
                     status = MSGQ_put(SampleDspMsgq, (MsgqMsg) msg);
