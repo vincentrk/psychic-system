@@ -91,7 +91,7 @@ int main(int argc, char** argv)
 	}
 	else {
 		dspExecutable = argv[1];
-		accelMult(dspExecutable,matrix_size, mat1, mat2, prod);
+		accelMult(dspExecutable,argv[3], mat1, mat2, prod);
 		printf("\nAccelerated done!\n");
 	}
 	// print accel results

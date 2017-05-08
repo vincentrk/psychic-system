@@ -12,7 +12,7 @@
 #include <system_os.h>
 
 #include <stdio.h>
-
+#include <stdlib.h>
 
 #if defined (__cplusplus)
 extern "C"
@@ -48,8 +48,8 @@ extern "C"
     {
         MSGQ_MsgHeader header;
         Uint16 command;
-        Uint32 arg1[SIZE];		// used to be Char8 arg1[256] = 2048 bits
-        Uint32 arg2[SIZE];      	// now, 2 x 32 x 16 = 1024
+        Uint32 *arg1;		// used to be Char8 arg1[256] = 2048 bits
+        Uint32 *arg2;      	// now, 2 x 32 x 16 = 1024
     } ControlMsg;
 
     /* Messaging buffer used by the application.
@@ -113,10 +113,10 @@ extern "C"
 
 
 
-NORMAL_API Void accelMult(Char8* dspExecutable,int size, int * mat1, int * mat2, int * prod){
+NORMAL_API Void accelMult(Char8* dspExecutable,Char8 size, int * mat1, int * mat2, int * prod){
 	DSP_STATUS status = DSP_SOK;
 	Uint8 processorId = 0;
-
+	
 	SYSTEM_0Print ("========== Application: Matrix Multiplication ==========\n");
     if ((dspExecutable != NULL) && (mat1 != NULL) && (mat2 != NULL))
     {
@@ -128,12 +128,12 @@ NORMAL_API Void accelMult(Char8* dspExecutable,int size, int * mat1, int * mat2,
         /* Specify the dsp executable file name for message creation phase. */
         if (DSP_SUCCEEDED(status))
         {
-            status = accelMult_Create(dspExecutable, processorId);
+            status = accelMult_Create(dspExecutable, processorId,size);
 
             /* Execute the message execute phase. */
             if (DSP_SUCCEEDED(status))
             {
-                status = accelMult_Execute(processorId, mat1, mat2, prod);
+                status = accelMult_Execute(processorId,size, mat1, mat2, prod);
             }
 
             /* Perform cleanup operation. */
@@ -151,7 +151,7 @@ NORMAL_API Void accelMult(Char8* dspExecutable,int size, int * mat1, int * mat2,
 //   ----------------------------------------------------------------------------
 //   Create
 //   ----------------------------------------------------------------------------
-NORMAL_API DSP_STATUS accelMult_Create(Char8* dspExecutable, Uint8 processorId) {
+NORMAL_API DSP_STATUS accelMult_Create(Char8* dspExecutable, Uint8 processorId, Char8 size) {
 	DSP_STATUS status = DSP_SOK;
     Uint32 numArgs = NUM_ARGS;
     MSGQ_LocateAttrs syncLocateAttrs;
@@ -206,7 +206,7 @@ NORMAL_API DSP_STATUS accelMult_Create(Char8* dspExecutable, Uint8 processorId) 
     /* Load the executable on the DSP. */
     if (DSP_SUCCEEDED(status))
     {
-        args [0] = itoa(matrix_size);
+        args [0] = size;
         {
             status = PROC_load(processorId, dspExecutable, numArgs, args);
         }
@@ -267,14 +267,20 @@ NORMAL_API DSP_STATUS accelMult_Create(Char8* dspExecutable, Uint8 processorId) 
 //   ----------------------------------------------------------------------------
 //   Execute
 //   ----------------------------------------------------------------------------
-NORMAL_API DSP_STATUS accelMult_Execute(Uint8 processorId,int size, int * mat1, int * mat2, int * prod) {
+NORMAL_API DSP_STATUS accelMult_Execute(Uint8 processorId,Char8 size, int * mat1, int * mat2, int * prod) {
 	DSP_STATUS  status = DSP_SOK;
     Uint16 sequenceNumber = 0;
     Uint16 msgId = 0;
     int i;
+    int matrix_size = atoi(size);
     ControlMsg *msg;
+    msg->arg1 = (Uint32)malloc(matrix_size*sizeof(Uint32));
+    msg->arg2 = (Uint32)malloc(matrix_size*sizeof(Uint32));
+    if(msg->arg1 == NULL || msg-> arg2 || NULL){
+	SYSTEM_0Print("Memory issue\n");
+	return -1;
+    }
     Uint32 result = 0;
-
     SYSTEM_0Print("Entered accelMult_Execute()\n");
 
 #if defined (PROFILE)
@@ -284,7 +290,7 @@ NORMAL_API DSP_STATUS accelMult_Execute(Uint8 processorId,int size, int * mat1, 
     // this
     // guarantees that we will at least wait for one message
     // In total we expect a total of SIZE * SIZE messages plus the first one from DSP
-    for (i = -1 ; (i < (size * size)) && (DSP_SUCCEEDED (status)); i++)
+    for (i = -1 ; (i < (matrix_size * matrix_size)) && (DSP_SUCCEEDED (status)); i++)
     {
         /* Receive the message. */
         status = MSGQ_get(SampleGppMsgq, WAIT_FOREVER, (MsgqMsg *) &msg);
@@ -313,17 +319,17 @@ NORMAL_API DSP_STATUS accelMult_Execute(Uint8 processorId,int size, int * mat1, 
         	// it's waiting for the DSP to send something...
             result = 0;
             int p = 0;
-            for(p = 0; p < size; p++){
+            for(p = 0; p < matrix_size; p++){
                 SYSTEM_1Print("%d ", msg->arg1[p]);
             	result += msg->arg1[p];
             }
             SYSTEM_0Print("\n");
             // Safe because first message (i.e. i=-1) is 0x01
-        	prod[i%size][i/size] = result; 
+        	prod[(i%matrix_size)*matrix_size+(i/matrix_size)] = result; 
         }
 
         /* If the message received is the final one, free it. */
-        if (i == size * size - 1)
+        if (i == matrix_size * matrix_size - 1)
         {
         	SYSTEM_0Print("Last message received.\n");
             MSGQ_free((MsgqMsg) msg);
@@ -351,23 +357,23 @@ NORMAL_API DSP_STATUS accelMult_Execute(Uint8 processorId,int size, int * mat1, 
                 // x = (i) % SIZE
                 // y = (i) / SIZE
                 int p = 0;
-                for (p = 0; p < size; p++) {
-                	msg->arg1[p] = mat1[(i+1) % size][p];
-                	msg->arg2[p] = mat2[p][(i+1) / size];
+                for (p = 0; p < matrix_size; p++) {
+                	msg->arg1[p] = mat1[((i+1) % matrix_size)*matrix_size+p];
+                	msg->arg2[p] = mat2[p*matrix_size +((i+1) / matrix_size)];
                 }
 
                 // Print what we are sending
                 SYSTEM_0Print("Sending:\n");
-                for(p = 0; p < size; p++){
+                for(p = 0; p < matrix_size; p++){
                     SYSTEM_1Print("%d ", msg->arg1[p]);
                     result += msg->arg1[p];
                 }
                 SYSTEM_0Print("\n");
-                for(p = 0; p < size; p++){
+                for(p = 0; p < matrix_size; p++){
                     SYSTEM_1Print("%d ", msg->arg2[p]);
                 }
                 SYSTEM_0Print("\nExpecting: \n");
-                for(p = 0; p < size; p++){
+                for(p = 0; p < matrix_size; p++){
                     SYSTEM_1Print("%d ", msg->arg1[p] * msg->arg2[p]);
                 }
                 SYSTEM_0Print("\n");
