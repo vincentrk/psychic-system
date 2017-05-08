@@ -13,7 +13,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
+// #include "Timer.h"
 #if defined (__cplusplus)
 extern "C"
 {
@@ -113,10 +113,10 @@ extern "C"
 
 
 
-NORMAL_API Void accelMult(Char8* dspExecutable,Char8 size, int * mat1, int * mat2, int * prod){
+NORMAL_API Void accelMult(Char8* dspExecutable,Char8 *size, int * mat1, int * mat2, int * prod){
 	DSP_STATUS status = DSP_SOK;
 	Uint8 processorId = 0;
-	
+
 	SYSTEM_0Print ("========== Application: Matrix Multiplication ==========\n");
     if ((dspExecutable != NULL) && (mat1 != NULL) && (mat2 != NULL))
     {
@@ -151,7 +151,7 @@ NORMAL_API Void accelMult(Char8* dspExecutable,Char8 size, int * mat1, int * mat
 //   ----------------------------------------------------------------------------
 //   Create
 //   ----------------------------------------------------------------------------
-NORMAL_API DSP_STATUS accelMult_Create(Char8* dspExecutable, Uint8 processorId, Char8 size) {
+NORMAL_API DSP_STATUS accelMult_Create(Char8* dspExecutable, Uint8 processorId, Char8 *size) {
 	DSP_STATUS status = DSP_SOK;
     Uint32 numArgs = NUM_ARGS;
     MSGQ_LocateAttrs syncLocateAttrs;
@@ -168,7 +168,7 @@ NORMAL_API DSP_STATUS accelMult_Create(Char8* dspExecutable, Uint8 processorId, 
         {
             SYSTEM_1Print("PROC_attach () failed. Status = [0x%x]\n", status);
         }
-    } 
+    }
     /* Open the pool. */
     if (DSP_SUCCEEDED(status))
     {
@@ -267,15 +267,19 @@ NORMAL_API DSP_STATUS accelMult_Create(Char8* dspExecutable, Uint8 processorId, 
 //   ----------------------------------------------------------------------------
 //   Execute
 //   ----------------------------------------------------------------------------
-NORMAL_API DSP_STATUS accelMult_Execute(Uint8 processorId,Char8 size, int * mat1, int * mat2, int * prod) {
+NORMAL_API DSP_STATUS accelMult_Execute(Uint8 processorId,Char8 *size, int * mat1, int * mat2, int * prod) {
 	DSP_STATUS  status = DSP_SOK;
     Uint16 sequenceNumber = 0;
     Uint16 msgId = 0;
     int i;
     int matrix_size = atoi(size);
     ControlMsg *msg;
-    msg->arg1 = (Uint32)malloc(matrix_size*sizeof(Uint32));
-    msg->arg2 = (Uint32)malloc(matrix_size*sizeof(Uint32));
+
+  //   Timer totalTimeDSP;
+	// initTimer(&totalTimeDSP, "Total Time DSP");
+
+    msg->arg1 = (Uint32*)malloc(matrix_size*sizeof(Uint32));
+    msg->arg2 = (Uint32*)malloc(matrix_size*sizeof(Uint32));
     if(msg->arg1 == NULL || msg-> arg2 || NULL){
 	SYSTEM_0Print("Memory issue\n");
 	return -1;
@@ -315,7 +319,7 @@ NORMAL_API DSP_STATUS accelMult_Execute(Uint8 processorId,Char8 size, int * mat1
         } else if (msg->command == 0x02) {
             SYSTEM_0Print("Message command 0x02 received\n");
         	// Extract the result vector and put into output
-        	// So far this is sequential. It should only do additions while the pool is full and 
+        	// So far this is sequential. It should only do additions while the pool is full and
         	// it's waiting for the DSP to send something...
             result = 0;
             int p = 0;
@@ -325,13 +329,15 @@ NORMAL_API DSP_STATUS accelMult_Execute(Uint8 processorId,Char8 size, int * mat1
             }
             SYSTEM_0Print("\n");
             // Safe because first message (i.e. i=-1) is 0x01
-        	prod[(i%matrix_size)*matrix_size+(i/matrix_size)] = result; 
+        	prod[(i%matrix_size)*matrix_size+(i/matrix_size)] = result;
         }
 
         /* If the message received is the final one, free it. */
         if (i == matrix_size * matrix_size - 1)
         {
         	SYSTEM_0Print("Last message received.\n");
+          // stopTimer(&totalTimeDSP);
+          // 	printTimer(&totalTimeDSP);
             MSGQ_free((MsgqMsg) msg);
         }
         else
@@ -351,6 +357,10 @@ NORMAL_API DSP_STATUS accelMult_Execute(Uint8 processorId,Char8 size, int * mat1
             /* Send the two vectors to be multiplied. */
             if (DSP_SUCCEEDED(status))
             {
+              if(i==0)
+              {
+                // startTimer(&totalTimeDSP);
+              }
                 msgId = MSGQ_getMsgId(msg);
                 MSGQ_setMsgId(msg, msgId);
                 // Put the vectors in the message

@@ -22,8 +22,8 @@ int main(int argc, char** argv)
     initTimer(&totalTime, "Total Time Sequential");
 
 	int matrix_size = MATRIX_SIZE_DEFAULT;
-	if (argc > 2) {
-		matrix_size = atoi(argv[3]);
+	if (argc == 3) {
+		matrix_size = atoi(argv[2]);
 	}
 
     // prodAccel will hold the result from the accelerated algorithm
@@ -91,7 +91,7 @@ int main(int argc, char** argv)
 	}
 	else {
 		dspExecutable = argv[1];
-		accelMult(dspExecutable,argv[3], mat1, mat2, prod);
+		accelMult(dspExecutable,argv[2], mat1, mat2, prod);
 		printf("\nAccelerated done!\n");
 	}
 	// print accel results
