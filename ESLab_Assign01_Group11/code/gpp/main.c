@@ -14,7 +14,7 @@
 /*  ----------------------------------- Custom Headers                */
 #include "Timer.h"
 
-void matMult(int mat1[SIZE][SIZE], int mat2[SIZE][SIZE], int prod[SIZE][SIZE]);
+void matMult(int size,int mat1[SIZE][SIZE], int mat2[SIZE][SIZE], int prod[SIZE][SIZE]);
 
 int main(int argc, char** argv)
 {
@@ -29,8 +29,8 @@ int main(int argc, char** argv)
 
 	// SEQUENTIAL VERSION START
 
-	int matrix_size = argv[2];
-	
+	int matrix_size = atoi(argv[2]);
+
 	for (i = 0;i < matrix_size; i++)
 	{
 		for (j = 0; j < matrix_size; j++)
@@ -38,7 +38,7 @@ int main(int argc, char** argv)
 			mat1[i][j] = i+j*2;
 		}
 	}
-	
+
 	for(i = 0; i < matrix_size; i++)
 	{
 		for (j = 0; j < matrix_size; j++)
@@ -48,9 +48,9 @@ int main(int argc, char** argv)
 	}
 
     startTimer(&totalTime);
-	matMult(mat1,mat2,prod);
+	matMult(matrix_size,mat1,mat2,prod);
     stopTimer(&totalTime);
-    printTimer(&totalTime);	
+    printTimer(&totalTime);
 
 	for (i = 0;i < matrix_size; i++)
 	{
@@ -60,7 +60,7 @@ int main(int argc, char** argv)
 			printf("\t%d ", prod[i][j]);
 		}
 	}
-	
+
 	printf("\nSequential done! \n \nStarting accelerated program...\n");
 
 
@@ -98,15 +98,15 @@ int main(int argc, char** argv)
 
 
 
-void matMult(int mat1[SIZE][SIZE], int mat2[SIZE][SIZE], int prod[SIZE][SIZE])
+void matMult(int size,int mat1[SIZE][SIZE], int mat2[SIZE][SIZE], int prod[SIZE][SIZE])
 {
 	int i, j, k;
-	for (i = 0;i < SIZE; i++)
+	for (i = 0;i < size; i++)
 	{
-		for (j = 0; j < SIZE; j++)
+		for (j = 0; j < size; j++)
 		{
 			prod[i][j]=0;
-			for(k=0;k<SIZE;k++)
+			for(k=0;k<size;k++)
 				prod[i][j] = prod[i][j]+mat1[i][k] * mat2[k][j];
 		}
 	}

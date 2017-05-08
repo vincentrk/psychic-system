@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 
+#include "Timer.h"
 
 #if defined (__cplusplus)
 extern "C"
@@ -168,7 +169,7 @@ NORMAL_API DSP_STATUS accelMult_Create(Char8* dspExecutable,Char8* matrix_size, 
         {
             SYSTEM_1Print("PROC_attach () failed. Status = [0x%x]\n", status);
         }
-    } 
+    }
     /* Open the pool. */
     if (DSP_SUCCEEDED(status))
     {
@@ -274,6 +275,9 @@ NORMAL_API DSP_STATUS accelMult_Execute(Uint8 processorId,Char8* matrix_size, in
     int i;
     ControlMsg *msg;
     Uint32 result = 0;
+    Timer timerDSP;
+    initTimer(&timerDSP,"DSP Time");
+
     int matrix_size_int = atoi(matrix_size);
     SYSTEM_0Print("Entered accelMult_Execute()\n");
 
@@ -305,26 +309,30 @@ NORMAL_API DSP_STATUS accelMult_Execute(Uint8 processorId,Char8* matrix_size, in
 #endif
 
         if (msg->command == 0x01) {
-            SYSTEM_0Print("Message command 0x01 received\n");
+
+            // SYSTEM_0Print("Message command 0x01 received\n");
+            startTimer(&timerDSP);
         } else if (msg->command == 0x02) {
-            SYSTEM_0Print("Message command 0x02 received\n");
+            // SYSTEM_0Print("Message command 0x02 received\n");
         	// Extract the result vector and put into output
-        	// So far this is sequential. It should only do additions while the pool is full and 
+        	// So far this is sequential. It should only do additions while the pool is full and
         	// it's waiting for the DSP to send something...
             result = 0;
             int p = 0;
             for(p = 0; p < matrix_size_int; p++){
-                SYSTEM_1Print("%d ", msg->arg1[p]);
+                // SYSTEM_1Print("%d ", msg->arg1[p]);
             	result += msg->arg1[p];
             }
-            SYSTEM_0Print("\n");
+            // SYSTEM_0Print("\n");
             // Safe because first message (i.e. i=-1) is 0x01
-        	prod[i%matrix_size_int][i/matrix_size_int] = result; 
+        	prod[i%matrix_size_int][i/matrix_size_int] = result;
         }
 
         /* If the message received is the final one, free it. */
-        if (i == SIZE * SIZE - 1)
+        if (i == matrix_size_int * matrix_size_int - 1)
         {
+          stopTimer(&timerDSP);
+          printTimer(&timerDSP);
         	SYSTEM_0Print("Last message received.\n");
             MSGQ_free((MsgqMsg) msg);
         }
@@ -357,20 +365,20 @@ NORMAL_API DSP_STATUS accelMult_Execute(Uint8 processorId,Char8* matrix_size, in
                 }
 
                 // Print what we are sending
-                SYSTEM_0Print("Sending:\n");
+                // SYSTEM_0Print("Sending:\n");
                 for(p = 0; p < matrix_size_int; p++){
-                    SYSTEM_1Print("%d ", msg->arg1[p]);
+                    // SYSTEM_1Print("%d ", msg->arg1[p]);
                     result += msg->arg1[p];
                 }
-                SYSTEM_0Print("\n");
-                for(p = 0; p < matrix_size_int; p++){
-                    SYSTEM_1Print("%d ", msg->arg2[p]);
-                }
-                SYSTEM_0Print("\nExpecting: \n");
-                for(p = 0; p < matrix_size_int; p++){
-                    SYSTEM_1Print("%d ", msg->arg1[p] * msg->arg2[p]);
-                }
-                SYSTEM_0Print("\n");
+                // SYSTEM_0Print("\n");
+                // for(p = 0; p < matrix_size_int; p++){
+                    // SYSTEM_1Print("%d ", msg->arg2[p]);
+                // }
+                // SYSTEM_0Print("\nExpecting: \n");
+                // for(p = 0; p < matrix_size_int; p++){
+                    // SYSTEM_1Print("%d ", msg->arg1[p] * msg->arg2[p]);
+                // }
+                // SYSTEM_0Print("\n");
                 // Send the message
                 status = MSGQ_put(SampleDspMsgq, (MsgqMsg) msg);
                 if (DSP_FAILED(status))
