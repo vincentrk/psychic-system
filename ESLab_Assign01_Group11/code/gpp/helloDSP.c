@@ -53,7 +53,8 @@ extern "C"
     {
         MSGQ_MsgHeader header;
         Uint16 command;
-        Uint32 arg1[ARG_SIZE];
+        Char8 arg1[ARG_SIZE];
+	Uint32 mat[ARG_SIZE];
     } ControlMsg;
 
     /* Messaging buffer used by the application.
@@ -308,7 +309,7 @@ extern "C"
                 {
                     for (j = 0; j < ARG_SIZE; j++)
 		    {
-			msg->arg1[j] = numIterations+j*2;
+			msg->mat[j] = numIterations+j*2;
 		    }
 		    msgId = MSGQ_getMsgId(msg);
                     MSGQ_setMsgId(msg, msgId);

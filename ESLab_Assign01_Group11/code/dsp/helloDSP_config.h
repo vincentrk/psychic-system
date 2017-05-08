@@ -52,6 +52,7 @@ typedef struct ControlMsg
     MSGQ_MsgHeader header;
     Uint16 command;
     Char arg1[ARG_SIZE];
+    Uint32 mat[ARG_SIZE];
 } ControlMsg;
 
 /* Messaging buffer used by the application.
