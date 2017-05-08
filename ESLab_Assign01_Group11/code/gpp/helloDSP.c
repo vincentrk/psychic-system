@@ -308,6 +308,7 @@ typedef struct ControlMsg{
                 /* Send the same message received in earlier MSGQ_get () call. */
                 if (DSP_SUCCEEDED(status))
                 {
+		    SYSTEM_1Print("%d: Creating first matrix..",numIterations);
                     for (row = 0;row < ROW_SIZE; row++)
 		    {
 			for (col = 0; col < COL_SIZE; col++)
@@ -315,7 +316,7 @@ typedef struct ControlMsg{
 				msg->mat[row][col] = row+col*2;
 			}
 		    }
-		    SYSTEM_1Print("Created first matrix sending", numIterations);
+		    SYSTEM_1Print("%d: First matrix sending",numIterations);
 		    msgId = MSGQ_getMsgId(msg);
                     MSGQ_setMsgId(msg, msgId);
                     status = MSGQ_put(SampleDspMsgq, (MsgqMsg) msg);
