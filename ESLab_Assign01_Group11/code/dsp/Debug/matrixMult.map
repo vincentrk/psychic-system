@@ -1,7 +1,7 @@
 ******************************************************************************
                TMS320C6x Linker Unix v6.1.17                   
 ******************************************************************************
->> Linked Mon May  8 10:59:36 2017
+>> Linked Mon May  8 15:32:42 2017
 
 OUTPUT FILE NAME:   <Debug/matrixMult.out>
 ENTRY POINT SYMBOL: "_c_int00"  address: 87e39e00
@@ -1350,7 +1350,7 @@ ffffffff   _RESET_VECTOR
 87e3b2c8   _TRC_R_mask
 87e3ac10   _TSK
 87e28670   _TSKMESSAGE_create
-87e28db8   _TSKMESSAGE_delete
+87e28dbc   _TSKMESSAGE_delete
 87e28974   _TSKMESSAGE_execute
 87e3a2d8   _TSK_ATTRS
 87e3a2f4   _TSK_config
@@ -2053,7 +2053,7 @@ address    name
 87e278ec   _MPCS_leave
 87e28670   _TSKMESSAGE_create
 87e28974   _TSKMESSAGE_execute
-87e28db8   _TSKMESSAGE_delete
+87e28dbc   _TSKMESSAGE_delete
 87e28fc4   _SMAPOOL_init
 87e28fe8   _SMAPOOL_open
 87e29170   _SMAPOOL_alloc

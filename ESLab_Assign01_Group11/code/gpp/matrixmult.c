@@ -128,12 +128,12 @@ NORMAL_API Void accelMult(Char8* dspExecutable,Char8* matrix_size, int mat1[SIZE
         /* Specify the dsp executable file name for message creation phase. */
         if (DSP_SUCCEEDED(status))
         {
-            status = accelMult_Create(dspExecutable, processorId);
+            status = accelMult_Create(dspExecutable,matrix_size, processorId);
 
             /* Execute the message execute phase. */
             if (DSP_SUCCEEDED(status))
             {
-                status = accelMult_Execute(processorId, mat1, mat2, prod);
+                status = accelMult_Execute(processorId,matrix_size, mat1, mat2, prod);
             }
 
             /* Perform cleanup operation. */

@@ -1,7 +1,7 @@
 ******************************************************************************
                TMS320C6x Linker Unix v6.1.17                   
 ******************************************************************************
->> Linked Mon May  8 10:59:37 2017
+>> Linked Mon May  8 15:32:43 2017
 
 OUTPUT FILE NAME:   <Release/matrixMult.out>
 ENTRY POINT SYMBOL: "_c_int00"  address: 87e34580
@@ -1322,8 +1322,8 @@ ffffffff   _RESET_VECTOR
 87e34f0a   _SamplePoolParams
 87e35be8   _TRC_R_mask
 87e358b0   _TSK
-87e25074   _TSKMESSAGE_create
-87e24f6c   _TSKMESSAGE_delete
+87e25068   _TSKMESSAGE_create
+87e24f58   _TSKMESSAGE_delete
 87e24c80   _TSKMESSAGE_execute
 87e34f88   _TSK_ATTRS
 87e34fa4   _TSK_config
@@ -2021,8 +2021,8 @@ address    name
 87e24a04   _IPS_exit
 87e24ab8   _IPS_clearReserved
 87e24c80   _TSKMESSAGE_execute
-87e24f6c   _TSKMESSAGE_delete
-87e25074   _TSKMESSAGE_create
+87e24f58   _TSKMESSAGE_delete
+87e25068   _TSKMESSAGE_create
 87e25920   __DSPLINK_init
 87e25e24   _POOL_open
 87e26440   _SMAPOOL_open

@@ -71,7 +71,7 @@ int main(int argc, char** argv)
 	initTimer(&dspTime, "Total time accelerated");
 
 	// Check for executable path
-	if (argc != 2) {
+	if (argc != 3) {
 		printf("Usage : %s <absolute path of DSP executable>\n", (int) argv[0]);
 	}
 	else {

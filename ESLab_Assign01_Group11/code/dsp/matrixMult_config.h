@@ -51,8 +51,8 @@ typedef struct ControlMsg
 {
     MSGQ_MsgHeader header;
     Uint16 command;
-    Uint32 arg1[16];
-    Uint32 arg2[16];  		// TODO: Hardcoded for testing!!
+    Uint32 arg1[128];
+    Uint32 arg2[128];  		// TODO: Hardcoded for testing!!
 } ControlMsg;
 
 /* Messaging buffer used by the application.
