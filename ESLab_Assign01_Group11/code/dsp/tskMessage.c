@@ -28,7 +28,6 @@
 #include <helloDSP_config.h>
 #include <tskMessage.h>
 
-#define SIZE 12
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,7 +43,7 @@ Uint8 dspMsgQName[DSP_MAX_STRLEN];
 /* Number of iterations message transfers to be done by the application. */
 extern Uint16 numTransfers;
 
-void matMult(int mat1[SIZE][SIZE], int mat2[SIZE][SIZE], int prod[SIZE][SIZE])
+void matmult(int **mat1, int **mat2, int prod[SIZE][SIZE]);
 Int send_msg(TSKMESSAGE_TransferInfo* info, MatrixMsg* msg);
 Int get_next_msg(TSKMESSAGE_TransferInfo* info, MatrixMsg* msg);
 
@@ -146,7 +145,7 @@ Int TSKMESSAGE_execute(TSKMESSAGE_TransferInfo* info)
     MatrixMsg* msg;
     int **mat1;
     int **mat2;
-    int **prod;
+    int prod[SIZE][SIZE];
 
 	
     /* Allocate and send the message */
@@ -196,7 +195,7 @@ Int TSKMESSAGE_execute(TSKMESSAGE_TransferInfo* info)
       	msg->command = 0x03;
         printf("Received second matrix.\n");
 	matmult(mat1,mat2,prod);
-	msg->arg = prod;
+	msg->arg = &prod;
 	status = send_msg(info,msg);
         printf("Result sent\n");
 	if (status != SYS_OK)
@@ -318,7 +317,7 @@ Int TSKMESSAGE_delete(TSKMESSAGE_TransferInfo* info)
     return status;
 }
 
-void matMult(int mat1[SIZE][SIZE], int mat2[SIZE][SIZE], int prod[SIZE][SIZE])
+void matMult(int **mat1, int **mat2, int prod[SIZE][SIZE])
 {
 	int i, j, k;
 	for (i = 0;i < SIZE; i++)
@@ -326,7 +325,7 @@ void matMult(int mat1[SIZE][SIZE], int mat2[SIZE][SIZE], int prod[SIZE][SIZE])
 		for (j = 0; j < SIZE; j++)
 		{
 			prod[i][j]=0;
-			for(k=0;k<SIZE;k++)
+			for(k=0;k<size;k++)
 				prod[i][j] = prod[i][j]+mat1[i][k] * mat2[k][j];
 		}
 	}

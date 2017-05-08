@@ -47,7 +47,7 @@ extern "C"
 #define NUMMSGINPOOL2   2
 #define NUMMSGINPOOL3   4
 
-#define MAT_SIZE 12
+#define SIZE ARG_SIZE
 
     /* Control message data structure. */
     /* Must contain a reserved space for the header */
@@ -61,7 +61,8 @@ extern "C"
     {
         MSGQ_MsgHeader header;
         Uint16 command;
-        int arg1[MAT_SIZE];
+        int arg[SIZE];
+	int size;
     } MatrixMsg;
 
     /* Messaging buffer used by the application.
