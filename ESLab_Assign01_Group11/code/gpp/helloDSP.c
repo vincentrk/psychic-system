@@ -295,25 +295,7 @@ extern "C"
             else if (msg->command == 0x02)
                 /* Send a vector and see if it is printed correctly. */
 		SYSTEM_1Print("Message received: %s\n", (Uint32) msg->arg1);
-                if (DSP_SUCCEEDED(status))
-                {
-                    msgId = MSGQ_getMsgId(msg);
-                    MSGQ_setMsgId(msg, msgId);
-	
-		line = 0;
-		for (j = 0; j < ARG_SIZE; j++)
-		{
-			msg->arg1[j] = line+j*2;
-		}
-			
-                    status = MSGQ_put(SampleDspMsgq, (MsgqMsg) msg);
-                    if (DSP_FAILED(status))
-                    {
-                        MSGQ_free((MsgqMsg) msg);
-                        SYSTEM_1Print("MSGQ_put () failed. Status = [0x%x]\n", status);
-                    }
-                }
-
+                
             /* If the message received is the final one, free it. */
             if ((numIterations != 0) && (i == (numIterations + 1)))
             {
@@ -324,9 +306,14 @@ extern "C"
                 /* Send the same message received in earlier MSGQ_get () call. */
                 if (DSP_SUCCEEDED(status))
                 {
-                    msgId = MSGQ_getMsgId(msg);
+                    for (j = 0; j < ARG_SIZE; j++)
+		    {
+			msg->arg1[j] = numIterations+j*2;
+		    }
+		    msgId = MSGQ_getMsgId(msg);
                     MSGQ_setMsgId(msg, msgId);
                     status = MSGQ_put(SampleDspMsgq, (MsgqMsg) msg);
+   		    			
                     if (DSP_FAILED(status))
                     {
                         MSGQ_free((MsgqMsg) msg);
