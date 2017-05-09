@@ -3,7 +3,7 @@ CC=$(BASE_TOOLCHAIN)/bin/arm-none-linux-gnueabi-g++
 
 SRCS=meanshift.cpp main.cpp
 OBJS=$(SRCS:%.cpp=%.o)
-EXEC=armMeanshiftExec
+EXEC=meanshift.gpp
 
 LDFLAGS=-lpthread -lm --sysroot=/opt/rootfs
 LIBS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video \

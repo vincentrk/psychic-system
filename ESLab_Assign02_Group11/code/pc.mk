@@ -6,7 +6,7 @@ MCPROF_DIR=~/mcprof
 
 CC=g++
 SRC=main.cpp meanshift.cpp
-EXEC=pcMeanshiftExec
+EXEC=meanshift.exe
 INCS = -I. -I $(MCPROF_DIR)
 CFLAGS = -Wall -O3 -Wfatal-errors
 LIBS = `pkg-config --libs opencv`
