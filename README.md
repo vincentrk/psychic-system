@@ -27,7 +27,7 @@ Allows these shorthands:
 `ssh pi.wijtemans.nl`  
 `ssh beagle.wijtemans.nl`  
 
-These commands work on eslab server, so you can ssh/scp directly to the board from the server.
+These commands are already enabled on the eslab server, so you can ssh/scp directly to the board from the server.
 (Note: eslab server blocks outgoing connections to ssh port.)
 
 ```
