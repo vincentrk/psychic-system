@@ -15,6 +15,10 @@ TU Delft IN4342 - Embedded Systems Lab
 
 [Vincent Koeten](https://github.com/vincentrk)
 
+## Git
+Please set your e-mail address when you clone the repo to the server.
+`git config user.email mygitemail@example.com`
+
 ## Connecting to things
 
 ### Example config
