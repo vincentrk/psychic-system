@@ -36,6 +36,9 @@ $(EXEC): $(OBJS)
 %.o : %.cpp
 	$(CC) $(CFLAGS) -c $< -o $@ 
 
-.PHONY: clean all
+send: $(EXEC)
+	scp $(EXEC) beagle.wijtemans.nl:/tmp/
+
+.PHONY: clean all send
 clean:
 	rm -f $(OBJS) $(EXEC) tracking_result.avi *~
