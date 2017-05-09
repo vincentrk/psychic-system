@@ -9,6 +9,9 @@
 int main(int argc, char ** argv)
 {
     Timer totalTimer("Total Time");
+    Timer readTimer("Reading Time");
+    Timer writeTimer("Writing Time");
+    Timer trackTimer("Tracking Time");
 
     cv::VideoCapture frame_capture;
     if(argc<2)
@@ -43,23 +46,29 @@ int main(int argc, char ** argv)
     for(fcount=0; fcount<TotalFrames; ++fcount)
     {
         // read a frame
+        readTimer.Start();
         int status = frame_capture.read(frame);
         if( 0 == status ) break;
+        readTimer.Pause();
 
         // track object
         #ifndef ARMCC
         // MCPROF_START();
         #endif
+        trackTimer.Start();
         cv::Rect ms_rect =  ms.track(frame);
+        trackTimer.Pause();
         #ifndef ARMCC
         // MCPROF_STOP();
         #endif
         
         // mark the tracked object in frame
+        writeTimer.Start();
         cv::rectangle(frame,ms_rect,cv::Scalar(0,0,255),3);
 
         // write the frame
         writer << frame;
+        writeTimer.Pause();
     }
     #ifndef ARMCC
     MCPROF_STOP();
@@ -67,6 +76,9 @@ int main(int argc, char ** argv)
     totalTimer.Pause();
 
     totalTimer.Print();
+    readTimer.Print();
+    writeTimer.Print();
+    trackTimer.Print();
 
     std::cout << "Processed " << fcount << " frames" << std::endl;
     std::cout << "Time: " << totalTimer.GetTime() <<" sec\nFPS : " << fcount/totalTimer.GetTime() << std::endl;
