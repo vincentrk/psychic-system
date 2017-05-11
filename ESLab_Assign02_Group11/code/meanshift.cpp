@@ -93,17 +93,17 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         next_rect.width = target_Region.width;
         next_rect.height = target_Region.height;
 
-        int row_index = target_Region.y;
-        int col_index = target_Region.x;
         cv::Vec3f curr_pixel;
         cv::Vec3f bin_value;
 
+        int row_index = target_Region.y;
         for(int i=0;i<target_Region.height;i++)
         {
             float norm_i = static_cast<float>(i-centre)/centre;
             float norm_i_sqr = norm_i*norm_i;
             // since (0 <= i < weight.rows)
             // it follows (-1 <= norm_i <= 1)
+            int col_index = target_Region.x;
             for(int j=0;j<target_Region.width;j++)
             {
                 float norm_j = static_cast<float>(j-centre)/centre;
@@ -122,7 +122,7 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
                         weight * target_model.at<float>(2, bin_value[2])
                            / target_candidate.at<float>(2, bin_value[2])
                     );
-                
+
                     delta_x += static_cast<float>(norm_j * weight);
                     delta_y += static_cast<float>(norm_i * weight);
                     sum_wij += static_cast<float>(weight);
