@@ -86,25 +86,63 @@ cv::Mat MeanShift::CalWeight(const cv::Mat &frame, cv::Mat &target_model,
     std::vector<cv::Mat> bgr_planes;
     cv::split(frame, bgr_planes);
 
-    for(int k = 0; k < 3;  k++)
+    int k = 0;
+    row_index = rec.y;
+    for(int i = 0; i < rows; i++)
     {
-        row_index = rec.y;
-        for(int i = 0; i < rows; i++)
+        col_index = rec.x;
+        for(int j = 0; j < cols; j++)
         {
-            col_index = rec.x;
-            for(int j = 0; j < cols; j++)
-            {
-                int curr_pixel = bgr_planes[k].at<uchar>(row_index, col_index);
-                int bin_value = curr_pixel / bin_width;
-                weight.at<float>(i,j) *= static_cast<float>((
-                    sqrt(
-                        target_model.at<float>(k, bin_value) / target_candidate.at<float>(k, bin_value)
-                    )
-                ));
-                col_index++;
-            }
-            row_index++;
+            int curr_pixel = bgr_planes[k].at<uchar>(row_index, col_index);
+            int bin_value = curr_pixel / bin_width;
+            // Change multiply-with to simple assignment, since value was initialized to 1.0
+            weight.at<float>(i,j) = static_cast<float>((
+                // Defer sqrt() to end. sqrt(a) * sqrt(b) = sqrt(a*b)
+                target_model.at<float>(k, bin_value) / target_candidate.at<float>(k, bin_value)
+            ));
+            col_index++;
         }
+        row_index++;
+    }
+    
+    k = 1;
+    row_index = rec.y;
+    for(int i = 0; i < rows; i++)
+    {
+        col_index = rec.x;
+        for(int j = 0; j < cols; j++)
+        {
+            int curr_pixel = bgr_planes[k].at<uchar>(row_index, col_index);
+            int bin_value = curr_pixel / bin_width;
+            weight.at<float>(i,j) *= static_cast<float>((
+                // Defer sqrt() to end. sqrt(a) * sqrt(b) = sqrt(a*b)
+                target_model.at<float>(k, bin_value) / target_candidate.at<float>(k, bin_value)
+            ));
+            col_index++;
+        }
+        row_index++;
+    }
+    
+    k = 2;
+    row_index = rec.y;
+    for(int i = 0; i < rows; i++)
+    {
+        col_index = rec.x;
+        for(int j = 0; j < cols; j++)
+        {
+            int curr_pixel = bgr_planes[k].at<uchar>(row_index, col_index);
+            int bin_value = curr_pixel / bin_width;
+            weight.at<float>(i,j) = static_cast<float>(
+                sqrt(
+                    weight.at<float>(i,j) * (
+                        target_model.at<float>(k, bin_value)
+                        / target_candidate.at<float>(k, bin_value)
+                    )
+                )
+            );
+            col_index++;
+        }
+        row_index++;
     }
 
     return weight;
