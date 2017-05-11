@@ -75,51 +75,12 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
 
 }
 
-cv::Mat MeanShift::CalWeight(const cv::Mat &frame, cv::Mat &target_model, 
-                    cv::Mat &target_candidate, cv::Rect &rec)
-{
-    int rows = rec.height;
-    int cols = rec.width;
-    int row_index = rec.y;
-    int col_index = rec.x;
-
-    cv::Mat weight(rows,cols,CV_32F,cv::Scalar(1.0000));
-
-    cv::Vec3f curr_pixel;
-    cv::Vec3f bin_value;
-    
-    row_index = rec.y;
-    for(int i = 0; i < rows; i++)
-    {
-        col_index = rec.x;
-        for(int j = 0; j < cols; j++)
-        {
-
-            curr_pixel = frame.at<cv::Vec3b>(row_index,col_index);
-            bin_value[0] = curr_pixel[0] / bin_width;
-            bin_value[1] = curr_pixel[1] / bin_width;
-            bin_value[2] = curr_pixel[2] / bin_width;
-            float term = target_model.at<float>(0, bin_value[0]) / target_candidate.at<float>(0, bin_value[0]);
-            term *= target_model.at<float>(1, bin_value[1]) / target_candidate.at<float>(1, bin_value[1]);
-            term = sqrt(
-                term * target_model.at<float>(2, bin_value[2]) / target_candidate.at<float>(2, bin_value[2])
-            );
-            weight.at<float>(i,j) = term;
-            col_index++;
-        }
-        row_index++;
-    }
-
-    return weight;
-}
-
 cv::Rect MeanShift::track(const cv::Mat &next_frame)
 {
     cv::Rect next_rect;
     for(int iter=0;iter<cfg.MaxIter;iter++)
     {
         cv::Mat target_candidate = pdf_representation(next_frame,target_Region);
-//        cv::Mat weight = CalWeight(next_frame,target_model,target_candidate,target_Region);
 
         float delta_x = 0.0;
         float sum_wij = 0.0;
