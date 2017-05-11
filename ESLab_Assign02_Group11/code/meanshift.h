@@ -25,7 +25,7 @@ public:
     void Init_target_frame(const cv::Mat &frame,const cv::Rect &rect);
     float Epanechnikov_kernel(cv::Mat &kernel);
     cv::Mat pdf_representation(const cv::Mat &frame,const cv::Rect &rect);
-    cv::Mat CalWeight(const cv::Mat &frame, cv::Mat &target_model, cv::Mat &target_candidate, cv::Rect &rec);
+    cv::Mat CalWeight(const std::vector<cv::Mat> &bgr_planes, cv::Mat &target_model, cv::Mat &target_candidate, cv::Rect &rec);
     cv::Mat CalWeight_opt(const cv::Mat &frame, cv::Mat &target_model, cv::Mat &target_candidate, cv::Rect &rec);
     cv::Rect track(const cv::Mat &next_frame);
 };

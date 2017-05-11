@@ -74,7 +74,7 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
 
 }
 
-cv::Mat MeanShift::CalWeight(const cv::Mat &frame, cv::Mat &target_model, 
+cv::Mat MeanShift::CalWeight(const std::vector<cv::Mat> &bgr_planes, cv::Mat &target_model, 
                     cv::Mat &target_candidate, cv::Rect &rec)
 {
     int rows = rec.height;
@@ -83,8 +83,6 @@ cv::Mat MeanShift::CalWeight(const cv::Mat &frame, cv::Mat &target_model,
     int col_index = rec.x;
 
     cv::Mat weight(rows,cols,CV_32F,cv::Scalar(1.0000));
-    std::vector<cv::Mat> bgr_planes;
-    cv::split(frame, bgr_planes);
 
     for(int k = 0; k < 3;  k++)
     {
@@ -112,11 +110,14 @@ cv::Mat MeanShift::CalWeight(const cv::Mat &frame, cv::Mat &target_model,
 
 cv::Rect MeanShift::track(const cv::Mat &next_frame)
 {
+    std::vector<cv::Mat> bgr_planes;
+    cv::split(next_frame, bgr_planes);
+
     cv::Rect next_rect;
     for(int iter=0;iter<cfg.MaxIter;iter++)
     {
         cv::Mat target_candidate = pdf_representation(next_frame,target_Region);
-        cv::Mat weight = CalWeight(next_frame,target_model,target_candidate,target_Region);
+        cv::Mat weight = CalWeight(bgr_planes,target_model,target_candidate,target_Region);
 
         float delta_x = 0.0;
         float sum_wij = 0.0;
