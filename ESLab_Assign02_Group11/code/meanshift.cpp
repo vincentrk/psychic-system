@@ -122,7 +122,7 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         float sum_wij = 0.0;
         float delta_y = 0.0;
         float centre = static_cast<float>((weight.rows-1)/2.0);
-        double mult = 0.0;
+//        double mult = 0.0;
 
         next_rect.x = target_Region.x;
         next_rect.y = target_Region.y;
@@ -134,11 +134,15 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
             for(int j=0;j<weight.cols;j++)
             {
                 float norm_i = static_cast<float>(i-centre)/centre;
+                // since (0 <= i < weight.rows)
+                // it follows (-1 <= norm_i <= 1)
                 float norm_j = static_cast<float>(j-centre)/centre;
-                mult = pow(norm_i,2)+pow(norm_j,2)>1.0?0.0:1.0;
-                delta_x += static_cast<float>(norm_j*weight.at<float>(i,j)*mult);
-                delta_y += static_cast<float>(norm_i*weight.at<float>(i,j)*mult);
-                sum_wij += static_cast<float>(weight.at<float>(i,j)*mult);
+//                mult = pow(norm_i,2)+pow(norm_j,2)>1.0?0.0:1.0;
+                if (abs(norm_j) <= 1.0 && norm_i*norm_i + norm_j*norm_j <= 1.0) {
+                    delta_x += static_cast<float>(norm_j*weight.at<float>(i,j));
+                    delta_y += static_cast<float>(norm_i*weight.at<float>(i,j));
+                    sum_wij += static_cast<float>(weight.at<float>(i,j));
+                }
             }
         }
 
