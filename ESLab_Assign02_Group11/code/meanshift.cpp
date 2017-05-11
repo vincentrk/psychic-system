@@ -119,12 +119,12 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
     for(int iter=0;iter<cfg.MaxIter;iter++)
     {
         cv::Mat target_candidate = pdf_representation(next_frame,target_Region);
-        cv::Mat weight = CalWeight(next_frame,target_model,target_candidate,target_Region);
+//        cv::Mat weight = CalWeight(next_frame,target_model,target_candidate,target_Region);
 
         float delta_x = 0.0;
         float sum_wij = 0.0;
         float delta_y = 0.0;
-        float centre = static_cast<float>((weight.rows-1)/2.0);
+        float centre = static_cast<float>((target_Region.height-1)/2.0);
 //        double mult = 0.0;
 
         next_rect.x = target_Region.x;
@@ -132,22 +132,43 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         next_rect.width = target_Region.width;
         next_rect.height = target_Region.height;
 
-        for(int i=0;i<weight.rows;i++)
+        int row_index = target_Region.y;
+        int col_index = target_Region.x;
+        cv::Vec3f curr_pixel;
+        cv::Vec3f bin_value;
+
+        for(int i=0;i<target_Region.height;i++)
         {
             float norm_i = static_cast<float>(i-centre)/centre;
             float norm_i_sqr = norm_i*norm_i;
             // since (0 <= i < weight.rows)
             // it follows (-1 <= norm_i <= 1)
-            for(int j=0;j<weight.cols;j++)
+            for(int j=0;j<target_Region.width;j++)
             {
                 float norm_j = static_cast<float>(j-centre)/centre;
 //                mult = pow(norm_i,2)+pow(norm_j,2)>1.0?0.0:1.0;
                 if (abs(norm_j) <= 1.0 && norm_i_sqr + norm_j * norm_j <= 1.0) {
-                    delta_x += static_cast<float>(norm_j*weight.at<float>(i,j));
-                    delta_y += static_cast<float>(norm_i*weight.at<float>(i,j));
-                    sum_wij += static_cast<float>(weight.at<float>(i,j));
+                    // calculate element of weight matrix (CalWeight)
+                    curr_pixel = next_frame.at<cv::Vec3b>(row_index,col_index);
+                    bin_value[0] = curr_pixel[0] / bin_width;
+                    bin_value[1] = curr_pixel[1] / bin_width;
+                    bin_value[2] = curr_pixel[2] / bin_width;
+                    float weight = target_model.at<float>(0, bin_value[0])
+                             / target_candidate.at<float>(0, bin_value[0]);
+                    weight *= target_model.at<float>(1, bin_value[1])
+                        / target_candidate.at<float>(1, bin_value[1]);
+                    weight = sqrt(
+                        weight * target_model.at<float>(2, bin_value[2])
+                           / target_candidate.at<float>(2, bin_value[2])
+                    );
+                
+                    delta_x += static_cast<float>(norm_j * weight);
+                    delta_y += static_cast<float>(norm_i * weight);
+                    sum_wij += static_cast<float>(weight);
                 }
+                col_index++;
             }
+            row_index++;
         }
 
         next_rect.x += static_cast<int>((delta_x/sum_wij)*centre);
