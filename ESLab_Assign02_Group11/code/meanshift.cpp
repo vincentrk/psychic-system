@@ -131,14 +131,15 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
 
         for(int i=0;i<weight.rows;i++)
         {
+            float norm_i = static_cast<float>(i-centre)/centre;
+            float norm_i_sqr = norm_i*norm_i;
+            // since (0 <= i < weight.rows)
+            // it follows (-1 <= norm_i <= 1)
             for(int j=0;j<weight.cols;j++)
             {
-                float norm_i = static_cast<float>(i-centre)/centre;
-                // since (0 <= i < weight.rows)
-                // it follows (-1 <= norm_i <= 1)
                 float norm_j = static_cast<float>(j-centre)/centre;
 //                mult = pow(norm_i,2)+pow(norm_j,2)>1.0?0.0:1.0;
-                if (abs(norm_j) <= 1.0 && norm_i*norm_i + norm_j*norm_j <= 1.0) {
+                if (abs(norm_j) <= 1.0 && norm_i_sqr + norm_j * norm_j <= 1.0) {
                     delta_x += static_cast<float>(norm_j*weight.at<float>(i,j));
                     delta_y += static_cast<float>(norm_i*weight.at<float>(i,j));
                     sum_wij += static_cast<float>(weight.at<float>(i,j));
