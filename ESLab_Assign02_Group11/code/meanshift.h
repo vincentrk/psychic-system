@@ -14,7 +14,6 @@ class MeanShift
     cv::Mat target_model;
     cv::Rect target_Region;
     cv::Mat kernel;
-    float kernel_inv_sum;
 
     struct config{
         int num_bins;

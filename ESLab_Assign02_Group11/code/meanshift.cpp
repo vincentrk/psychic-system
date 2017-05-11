@@ -17,7 +17,8 @@ void  MeanShift::Init_target_frame(const cv::Mat &frame,const cv::Rect &rect)
 {
     target_Region = rect;
     kernel.create(rect.height, rect.width, CV_32F);
-    kernel_inv_sum = 1.0 / Epanechnikov_kernel(kernel);
+    float kernel_sum = Epanechnikov_kernel(kernel);
+    kernel /= kernel_sum; // pre-scale kernel
     target_model = pdf_representation(frame,target_Region);
 }
 
@@ -44,8 +45,6 @@ float  MeanShift::Epanechnikov_kernel(cv::Mat &kernel)
 }
 cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect)
 {
-    float normalized_C = kernel_inv_sum;
-
     cv::Mat pdf_model(8,16,CV_32F,cv::Scalar(1e-10));
 
     cv::Vec3f curr_pixel_value;
@@ -63,9 +62,9 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
             bin_value[0] = (curr_pixel_value[0]/bin_width);
             bin_value[1] = (curr_pixel_value[1]/bin_width);
             bin_value[2] = (curr_pixel_value[2]/bin_width);
-            pdf_model.at<float>(0,bin_value[0]) += kernel.at<float>(i,j)*normalized_C;
-            pdf_model.at<float>(1,bin_value[1]) += kernel.at<float>(i,j)*normalized_C;
-            pdf_model.at<float>(2,bin_value[2]) += kernel.at<float>(i,j)*normalized_C;
+            pdf_model.at<float>(0,bin_value[0]) += kernel.at<float>(i,j);
+            pdf_model.at<float>(1,bin_value[1]) += kernel.at<float>(i,j);
+            pdf_model.at<float>(2,bin_value[2]) += kernel.at<float>(i,j);
             clo_index++;
         }
         row_index++;
