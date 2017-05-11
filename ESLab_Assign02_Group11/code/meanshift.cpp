@@ -83,28 +83,29 @@ cv::Mat MeanShift::CalWeight(const cv::Mat &frame, cv::Mat &target_model,
     int col_index = rec.x;
 
     cv::Mat weight(rows,cols,CV_32F,cv::Scalar(1.0000));
-    std::vector<cv::Mat> bgr_planes;
-    cv::split(frame, bgr_planes);
 
-    for(int k = 0; k < 3;  k++)
+    cv::Vec3f curr_pixel;
+    cv::Vec3f bin_value;
+    
+    row_index = rec.y;
+    for(int i = 0; i < rows; i++)
     {
-        row_index = rec.y;
-        for(int i = 0; i < rows; i++)
+        col_index = rec.x;
+        for(int j = 0; j < cols; j++)
         {
-            col_index = rec.x;
-            for(int j = 0; j < cols; j++)
-            {
-                int curr_pixel = bgr_planes[k].at<uchar>(row_index, col_index);
-                int bin_value = curr_pixel / bin_width;
-                weight.at<float>(i,j) *= static_cast<float>((
-                    sqrt(
-                        target_model.at<float>(k, bin_value) / target_candidate.at<float>(k, bin_value)
-                    )
-                ));
-                col_index++;
-            }
-            row_index++;
+            curr_pixel = frame.at<cv::Vec3b>(row_index,col_index);
+            bin_value[0] = curr_pixel[0] / bin_width;
+            bin_value[1] = curr_pixel[1] / bin_width;
+            bin_value[2] = curr_pixel[2] / bin_width;
+            float term = target_model.at<float>(0, bin_value[0]) / target_candidate.at<float>(0, bin_value[0]);
+            term *= target_model.at<float>(1, bin_value[1]) / target_candidate.at<float>(1, bin_value[1]);
+            term = sqrt(
+                term * target_model.at<float>(2, bin_value[2]) / target_candidate.at<float>(2, bin_value[2])
+            );
+            weight.at<float>(i,j) = term;
+            col_index++;
         }
+        row_index++;
     }
 
     return weight;
