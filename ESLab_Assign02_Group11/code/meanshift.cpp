@@ -17,7 +17,7 @@ void  MeanShift::Init_target_frame(const cv::Mat &frame,const cv::Rect &rect)
 {
     target_Region = rect;
     kernel.create(rect.height, rect.width, CV_32F);
-    kernel_inv_sum = Epanechnikov_kernel(kernel);
+    kernel_inv_sum = 1.0 / Epanechnikov_kernel(kernel);
     target_model = pdf_representation(frame,target_Region);
 }
 
