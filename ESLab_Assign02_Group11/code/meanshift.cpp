@@ -11,7 +11,7 @@ void print_mat(cv::Mat &mat)
     int w = mat.cols;
     for (int y=0; y<h; y++) {
         for(int x=0; x<w; x++) {
-            std::cout << mat.at<float>(x, y) << " ";
+            std::cout << mat.at<float>(y, x) << " ";
         }
         std::cout << "\n";
     }
