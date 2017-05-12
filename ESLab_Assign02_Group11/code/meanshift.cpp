@@ -82,11 +82,9 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
     int kern_w = rect.width / 2;
 
     int row_index = rect.y;
-    int clo_index = rect.x;
-
     for(int i=0;i<rect.height;i++)
     {
-        clo_index = rect.x;
+        int clo_index = rect.x;
         for(int j=0;j<rect.width;j++)
         {
             cv::Vec3b bin_value;
