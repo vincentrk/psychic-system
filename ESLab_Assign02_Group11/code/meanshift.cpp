@@ -137,8 +137,7 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         next_rect.width = target_Region.width;
         next_rect.height = target_Region.height;
 
-        cv::Vec3b curr_pixel;
-        cv::Vec3b bin_value;
+
 
         int row_index = target_Region.y;
         for(int i=0;i<target_Region.height;i++)
@@ -158,7 +157,8 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
                 }
                 if (norm_i_sqr + norm_j * norm_j <= 1.0) {
                     // calculate element of weight matrix (CalWeight)
-                    curr_pixel = next_frame.at<cv::Vec3b>(row_index,col_index);
+                    cv::Vec3b bin_value;
+                    cv::Vec3b curr_pixel = next_frame.at<cv::Vec3b>(row_index,col_index);
                     bin_value[0] = curr_pixel[0] / bin_width;
                     bin_value[1] = curr_pixel[1] / bin_width;
                     bin_value[2] = curr_pixel[2] / bin_width;
