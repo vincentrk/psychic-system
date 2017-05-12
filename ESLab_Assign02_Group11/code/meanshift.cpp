@@ -84,6 +84,10 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
     int kern_h = height / 2;
     int kern_w = width / 2;
 
+    float * plane_a = pdf_model.ptr<float>(0);
+    float * plane_b = pdf_model.ptr<float>(1);
+    float * plane_c = pdf_model.ptr<float>(2);
+
     int row_index = rect.y;
     for(int i=0;i<height;i++)
     {
@@ -96,9 +100,9 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
             bin_value[1] = (curr_pixel_value[1]/bin_width);
             bin_value[2] = (curr_pixel_value[2]/bin_width);
             float kernel_element = kernel.at<float>(abs(i - kern_h), abs(j - kern_w));
-            pdf_model.at<float>(0,bin_value[0]) += kernel_element;
-            pdf_model.at<float>(1,bin_value[1]) += kernel_element;
-            pdf_model.at<float>(2,bin_value[2]) += kernel_element;
+            plane_a[bin_value[0]] += kernel_element;
+            plane_b[bin_value[1]] += kernel_element;
+            plane_c[bin_value[2]] += kernel_element;
             clo_index++;
         }
         row_index++;
@@ -139,6 +143,10 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         int height = target_Region.height;
         int width = target_Region.height;
 
+        float * plane_a = target_ratio.ptr<float>(0);
+        float * plane_b = target_ratio.ptr<float>(1);
+        float * plane_c = target_ratio.ptr<float>(2);
+
         int row_index = target_Region.y;
         for(int i=0;i<height;i++)
         {
@@ -163,9 +171,9 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
                     bin_value[1] = curr_pixel[1] / bin_width;
                     bin_value[2] = curr_pixel[2] / bin_width;
                     float weight = sqrt(
-                              target_ratio.at<float>(0, bin_value[0])
-                            * target_ratio.at<float>(1, bin_value[1])
-                            * target_ratio.at<float>(2, bin_value[2]));
+                              plane_a[bin_value[0]]
+                            * plane_b[bin_value[1]]
+                            * plane_c[bin_value[2]]);
 
                     delta_x += static_cast<float>(norm_j * weight);
                     delta_y += static_cast<float>(norm_i * weight);
