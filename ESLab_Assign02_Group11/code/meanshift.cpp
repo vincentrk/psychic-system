@@ -75,10 +75,20 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
 
 cv::Rect MeanShift::track(const cv::Mat &next_frame)
 {
+    cv::Mat target_ratio(3, cfg.num_bins, CV_32F);
     cv::Rect next_rect;
+
     for(int iter=0;iter<cfg.MaxIter;iter++)
     {
         cv::Mat target_candidate = pdf_representation(next_frame,target_Region);
+        for (int k=0; k<3; k++)
+        {
+            for (int b=0; b<cfg.num_bins; b++)
+            {
+                target_ratio.at<float>(k, b) = target_model.at<float>(0, b)
+                                         / target_candidate.at<float>(0, b);
+            }
+        }
 
         float delta_x = 0.0;
         float sum_wij = 0.0;
@@ -112,14 +122,10 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
                     bin_value[0] = curr_pixel[0] / bin_width;
                     bin_value[1] = curr_pixel[1] / bin_width;
                     bin_value[2] = curr_pixel[2] / bin_width;
-                    float weight = target_model.at<float>(0, bin_value[0])
-                             / target_candidate.at<float>(0, bin_value[0]);
-                    weight *= target_model.at<float>(1, bin_value[1])
-                        / target_candidate.at<float>(1, bin_value[1]);
-                    weight = sqrt(
-                        weight * target_model.at<float>(2, bin_value[2])
-                           / target_candidate.at<float>(2, bin_value[2])
-                    );
+                    float weight = sqrt(
+                              target_ratio.at<float>(0, bin_value[0])
+                            * target_ratio.at<float>(1, bin_value[1])
+                            * target_ratio.at<float>(2, bin_value[2]));
 
                     delta_x += static_cast<float>(norm_j * weight);
                     delta_y += static_cast<float>(norm_i * weight);
