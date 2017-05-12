@@ -81,9 +81,6 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
     int kern_h = rect.height / 2;
     int kern_w = rect.width / 2;
 
-    cv::Vec3b curr_pixel_value;
-    cv::Vec3b bin_value;
-
     int row_index = rect.y;
     int clo_index = rect.x;
 
@@ -92,7 +89,8 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
         clo_index = rect.x;
         for(int j=0;j<rect.width;j++)
         {
-            curr_pixel_value = frame.at<cv::Vec3b>(row_index,clo_index);
+            cv::Vec3b bin_value;
+            cv::Vec3b curr_pixel_value = frame.at<cv::Vec3b>(row_index,clo_index);
             bin_value[0] = (curr_pixel_value[0]/bin_width);
             bin_value[1] = (curr_pixel_value[1]/bin_width);
             bin_value[2] = (curr_pixel_value[2]/bin_width);
@@ -136,8 +134,6 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         next_rect.y = target_Region.y;
         next_rect.width = target_Region.width;
         next_rect.height = target_Region.height;
-
-
 
         int row_index = target_Region.y;
         for(int i=0;i<target_Region.height;i++)
