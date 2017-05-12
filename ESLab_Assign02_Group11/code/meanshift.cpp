@@ -28,16 +28,36 @@ MeanShift::MeanShift()
 void  MeanShift::Init_target_frame(const cv::Mat &frame,const cv::Rect &rect)
 {
     target_Region = rect;
-    kernel.create(rect.height, rect.width, CV_32F);
-    float kernel_sum = Epanechnikov_kernel(kernel);
+    float kernel_sum = Epanechnikov_kernel(kernel, rect.height, rect.width);
     kernel /= kernel_sum; // pre-scale kernel
     target_model = pdf_representation(frame,target_Region);
 }
 
-float  MeanShift::Epanechnikov_kernel(cv::Mat &kernel)
+float & MeanShift::kernel_elem(int row, int col, int height, int width) {
+    int nrow = abs(row - height / 2);
+    int ncol = abs(col - width / 2);
+    return (kernel.at<float>(nrow, ncol));
+}
+
+float  MeanShift::Epanechnikov_kernel(cv::Mat &kernel, int h, int w)
 {
-    int h = kernel.rows;
-    int w = kernel.cols;
+    /* Example kernels, with quarter kernel
+       0 0 0 0   2 1 0  This needs to keep the zeros
+       0 0 1 0   1 0 0
+       0 1 2 1   0 0 0
+       0 0 1 0
+
+       0 1 0   2 1
+       1 2 1   1 0
+       0 1 0
+
+       Reading starts from the right of the quarter kernel,
+       then turns around on the edge.
+     */
+    // Halve the size, round up, add one for the zero row
+    // (x+1+1)/2 == x/2+1
+    kernel.create(h/2+1, w/2+1, CV_32F);
+    std::cout << "kernel size: " << h << ";" << w << "\n";
 
     float kernel_sum = 0.0;
     for(int i=0;i<h;i++)
@@ -48,7 +68,7 @@ float  MeanShift::Epanechnikov_kernel(cv::Mat &kernel)
             float  y = static_cast<float> (j - w/2);
             float norm_x = x*x/(h*h/4)+y*y/(w*w/4);
             float result =norm_x<1?(1.0-norm_x):0;
-            kernel.at<float>(i,j) = result;
+            kernel_elem(i, j, h, w) = result;
             kernel_sum += result;
         }
     }
@@ -73,9 +93,10 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
             bin_value[0] = (curr_pixel_value[0]/bin_width);
             bin_value[1] = (curr_pixel_value[1]/bin_width);
             bin_value[2] = (curr_pixel_value[2]/bin_width);
-            pdf_model.at<float>(0,bin_value[0]) += kernel.at<float>(i,j);
-            pdf_model.at<float>(1,bin_value[1]) += kernel.at<float>(i,j);
-            pdf_model.at<float>(2,bin_value[2]) += kernel.at<float>(i,j);
+            float kernel_element = kernel_elem(i, j, rect.height, rect.width);
+            pdf_model.at<float>(0,bin_value[0]) += kernel_element;
+            pdf_model.at<float>(1,bin_value[1]) += kernel_element;
+            pdf_model.at<float>(2,bin_value[2]) += kernel_element;
             clo_index++;
         }
         row_index++;
