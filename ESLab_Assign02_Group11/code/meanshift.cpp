@@ -85,8 +85,8 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         {
             for (int b=0; b<cfg.num_bins; b++)
             {
-                target_ratio.at<float>(k, b) = target_model.at<float>(0, b)
-                                         / target_candidate.at<float>(0, b);
+                target_ratio.at<float>(k, b) = target_model.at<float>(k, b)
+                                         / target_candidate.at<float>(k, b);
             }
         }
 
