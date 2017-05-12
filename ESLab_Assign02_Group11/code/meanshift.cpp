@@ -26,6 +26,8 @@ float  MeanShift::Epanechnikov_kernel(cv::Mat &kernel)
 {
     int h = kernel.rows;
     int w = kernel.cols;
+    float h_sqr_div_4 = h*h/4.0;
+    float w_sqr_div_4 = w*w/4.0;
 
     float epanechnikov_cd = 0.1*PI*h*w;
     float kernel_sum = 0.0;
@@ -35,7 +37,7 @@ float  MeanShift::Epanechnikov_kernel(cv::Mat &kernel)
         {
             float x = static_cast<float>(i - h/2);
             float  y = static_cast<float> (j - w/2);
-            float norm_x = x*x/(h*h/4)+y*y/(w*w/4);
+            float norm_x = x*x/(h_sqr_div_4)+y*y/(w_sqr_div_4);
             float result =norm_x<1?(epanechnikov_cd*(1.0-norm_x)):0;
             kernel.at<float>(i,j) = result;
             kernel_sum += result;
