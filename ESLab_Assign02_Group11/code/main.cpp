@@ -34,6 +34,7 @@ int main(int argc, char ** argv)
     MeanShift ms; // creat meanshift obj
     ms.Init_target_frame(frame,rect); // init the meanshift
 
+    {
     int codec = CV_FOURCC('F', 'L', 'V', '1');
     cv::VideoWriter writer("tracking_result.avi", codec, 20, cv::Size(frame.cols,frame.rows));
 
@@ -82,6 +83,14 @@ int main(int argc, char ** argv)
 
     std::cout << "Processed " << fcount << " frames" << std::endl;
     std::cout << "Time: " << totalTimer.GetTime() <<" sec\nFPS : " << fcount/totalTimer.GetTime() << std::endl;
+
+    } // Destroy writer to flush output to file
+    #ifdef ARMCC
+    std::cout << "4bf41e5572f56bfedb3182781e24d4ac  is expected...\n";
+    #else
+    std::cout << "051a524f68785b2f9c7fbb0754facb35  is expected...\n";
+    #endif
+    system("md5sum tracking_result.avi");
 
     return 0;
 }

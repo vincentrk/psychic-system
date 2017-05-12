@@ -15,6 +15,9 @@ TU Delft IN4342 - Embedded Systems Lab
 
 [Vincent Koeten](https://github.com/vincentrk)
 
+## Link to Overleaf Report
+[REPORT ASSIGNMENT 02](https://www.overleaf.com/9529805tfmgpcsshcry)
+
 ## Git
 Please set your e-mail address when you clone the repo to the server.  
 `git config user.email mygitemail@example.com`

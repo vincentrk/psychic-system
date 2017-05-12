@@ -46,7 +46,7 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
 {
     float normalized_C = kernel_inv_sum;
 
-    cv::Mat pdf_model(8,16,CV_32F,cv::Scalar(1e-10));
+    cv::Mat pdf_model(3,cfg.num_bins,CV_32F,cv::Scalar(1e-10));
 
     cv::Vec3f curr_pixel_value;
     cv::Vec3f bin_value;
