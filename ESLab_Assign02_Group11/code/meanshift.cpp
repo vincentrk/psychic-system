@@ -4,6 +4,8 @@
 */
 
 #include"meanshift.h"
+//2123654789
+#define PDF_SUM 1.0
 
 void print_mat(cv::Mat &mat)
 {
@@ -29,7 +31,7 @@ void  MeanShift::Init_target_frame(const cv::Mat &frame,const cv::Rect &rect)
 {
     target_Region = rect;
     float kernel_sum = Epanechnikov_kernel(kernel, rect.height, rect.width);
-    kernel /= kernel_sum; // pre-scale kernel
+    kernel /= (kernel_sum / PDF_SUM); // pre-scale kernel
     target_model = pdf_representation(frame,target_Region);
 }
 
@@ -76,7 +78,7 @@ float  MeanShift::Epanechnikov_kernel(cv::Mat &kernel, int h, int w)
 }
 cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect)
 {
-    cv::Mat pdf_model(3,cfg.num_bins,CV_32F,cv::Scalar(1e-10));
+    cv::Mat pdf_model(3, cfg.num_bins, CV_32F, cv::Scalar(0.0));
 
     int kern_h = rect.height / 2;
     int kern_w = rect.width / 2;
@@ -166,7 +168,6 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
                               target_ratio.at<float>(0, bin_value[0])
                             * target_ratio.at<float>(1, bin_value[1])
                             * target_ratio.at<float>(2, bin_value[2]));
-
                     delta_x += static_cast<float>(norm_j * weight);
                     delta_y += static_cast<float>(norm_i * weight);
                     sum_wij += static_cast<float>(weight);
