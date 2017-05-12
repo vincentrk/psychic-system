@@ -24,7 +24,8 @@ class MeanShift
 public:
     MeanShift();
     void Init_target_frame(const cv::Mat &frame,const cv::Rect &rect);
-    float Epanechnikov_kernel(cv::Mat &kernel);
+    float & kernel_elem(int row, int col, int height, int width);
+    float Epanechnikov_kernel(cv::Mat &kernel, int h, int w);
     cv::Mat pdf_representation(const cv::Mat &frame,const cv::Rect &rect);
     cv::Mat CalWeight(const cv::Mat &frame, cv::Mat &target_model, cv::Mat &target_candidate, cv::Rect &rec);
     cv::Mat CalWeight_opt(const cv::Mat &frame, cv::Mat &target_model, cv::Mat &target_candidate, cv::Rect &rec);

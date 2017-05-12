@@ -5,6 +5,18 @@
 
 #include"meanshift.h"
 
+void print_mat(cv::Mat &mat)
+{
+    int h = mat.rows;
+    int w = mat.cols;
+    for (int y=0; y<h; y++) {
+        for(int x=0; x<w; x++) {
+            std::cout << mat.at<float>(y, x) << " ";
+        }
+        std::cout << "\n";
+    }
+}
+
 MeanShift::MeanShift()
 {
     cfg.MaxIter = 8;
@@ -16,18 +28,37 @@ MeanShift::MeanShift()
 void  MeanShift::Init_target_frame(const cv::Mat &frame,const cv::Rect &rect)
 {
     target_Region = rect;
-    kernel.create(rect.height, rect.width, CV_32F);
-    float kernel_sum = Epanechnikov_kernel(kernel);
+    float kernel_sum = Epanechnikov_kernel(kernel, rect.height, rect.width);
     kernel /= kernel_sum; // pre-scale kernel
     target_model = pdf_representation(frame,target_Region);
 }
 
-float  MeanShift::Epanechnikov_kernel(cv::Mat &kernel)
-{
-    int h = kernel.rows;
-    int w = kernel.cols;
+float & MeanShift::kernel_elem(int row, int col, int height, int width) {
+    int nrow = abs(row - height / 2);
+    int ncol = abs(col - width / 2);
+    return (kernel.at<float>(nrow, ncol));
+}
 
-    float epanechnikov_cd = 0.1*PI*h*w;
+float  MeanShift::Epanechnikov_kernel(cv::Mat &kernel, int h, int w)
+{
+    /* Example kernels, with quarter kernel
+       0 0 0 0   2 1 0  This needs to keep the zeros
+       0 0 1 0   1 0 0
+       0 1 2 1   0 0 0
+       0 0 1 0
+
+       0 1 0   2 1
+       1 2 1   1 0
+       0 1 0
+
+       Reading starts from the right of the quarter kernel,
+       then turns around on the edge.
+     */
+    // Halve the size, round up, add one for the zero row
+    // (x+1+1)/2 == x/2+1
+    kernel.create(h/2+1, w/2+1, CV_32F);
+    std::cout << "kernel size: " << h << ";" << w << "\n";
+
     float kernel_sum = 0.0;
     for(int i=0;i<h;i++)
     {
@@ -36,8 +67,8 @@ float  MeanShift::Epanechnikov_kernel(cv::Mat &kernel)
             float x = static_cast<float>(i - h/2);
             float  y = static_cast<float> (j - w/2);
             float norm_x = x*x/(h*h/4)+y*y/(w*w/4);
-            float result =norm_x<1?(epanechnikov_cd*(1.0-norm_x)):0;
-            kernel.at<float>(i,j) = result;
+            float result =norm_x<1?(1.0-norm_x):0;
+            kernel_elem(i, j, h, w) = result;
             kernel_sum += result;
         }
     }
@@ -45,7 +76,10 @@ float  MeanShift::Epanechnikov_kernel(cv::Mat &kernel)
 }
 cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect)
 {
-    cv::Mat pdf_model(8,16,CV_32F,cv::Scalar(1e-10));
+    cv::Mat pdf_model(3,cfg.num_bins,CV_32F,cv::Scalar(1e-10));
+
+    int kern_h = rect.height / 2;
+    int kern_w = rect.width / 2;
 
     cv::Vec3b curr_pixel_value;
     cv::Vec3b bin_value;
@@ -62,9 +96,10 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
             bin_value[0] = (curr_pixel_value[0]/bin_width);
             bin_value[1] = (curr_pixel_value[1]/bin_width);
             bin_value[2] = (curr_pixel_value[2]/bin_width);
-            pdf_model.at<float>(0,bin_value[0]) += kernel.at<float>(i,j);
-            pdf_model.at<float>(1,bin_value[1]) += kernel.at<float>(i,j);
-            pdf_model.at<float>(2,bin_value[2]) += kernel.at<float>(i,j);
+            float kernel_element = kernel.at<float>(abs(i - kern_h), abs(j - kern_w));
+            pdf_model.at<float>(0,bin_value[0]) += kernel_element;
+            pdf_model.at<float>(1,bin_value[1]) += kernel_element;
+            pdf_model.at<float>(2,bin_value[2]) += kernel_element;
             clo_index++;
         }
         row_index++;
@@ -76,10 +111,20 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
 
 cv::Rect MeanShift::track(const cv::Mat &next_frame)
 {
+    cv::Mat target_ratio(3, cfg.num_bins, CV_32F);
     cv::Rect next_rect;
+
     for(int iter=0;iter<cfg.MaxIter;iter++)
     {
         cv::Mat target_candidate = pdf_representation(next_frame,target_Region);
+        for (int k=0; k<3; k++)
+        {
+            for (int b=0; b<cfg.num_bins; b++)
+            {
+                target_ratio.at<float>(k, b) = target_model.at<float>(k, b)
+                                         / target_candidate.at<float>(k, b);
+            }
+        }
 
         float delta_x = 0.0;
         float sum_wij = 0.0;
@@ -107,20 +152,20 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
             {
                 float norm_j = static_cast<float>(j-centre)/centre;
 //                mult = pow(norm_i,2)+pow(norm_j,2)>1.0?0.0:1.0;
-                if (abs(norm_j) <= 1.0 && norm_i_sqr + norm_j * norm_j <= 1.0) {
+                if (norm_j > 1.0) {
+                    // norm_j grows lineairly with j, so it will be "too big" for the rest of the loop
+                    break;
+                }
+                if (norm_i_sqr + norm_j * norm_j <= 1.0) {
                     // calculate element of weight matrix (CalWeight)
                     curr_pixel = next_frame.at<cv::Vec3b>(row_index,col_index);
                     bin_value[0] = curr_pixel[0] / bin_width;
                     bin_value[1] = curr_pixel[1] / bin_width;
                     bin_value[2] = curr_pixel[2] / bin_width;
-                    float weight = target_model.at<float>(0, bin_value[0])
-                             / target_candidate.at<float>(0, bin_value[0]);
-                    weight *= target_model.at<float>(1, bin_value[1])
-                        / target_candidate.at<float>(1, bin_value[1]);
-                    weight = sqrt(
-                        weight * target_model.at<float>(2, bin_value[2])
-                           / target_candidate.at<float>(2, bin_value[2])
-                    );
+                    float weight = sqrt(
+                              target_ratio.at<float>(0, bin_value[0])
+                            * target_ratio.at<float>(1, bin_value[1])
+                            * target_ratio.at<float>(2, bin_value[2]));
 
                     delta_x += static_cast<float>(norm_j * weight);
                     delta_y += static_cast<float>(norm_i * weight);
