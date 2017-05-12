@@ -13,6 +13,7 @@ class MeanShift
     float bin_width;
     cv::Mat target_model;
     cv::Rect target_Region;
+    cv::Mat kernel;
 
     struct config{
         int num_bins;

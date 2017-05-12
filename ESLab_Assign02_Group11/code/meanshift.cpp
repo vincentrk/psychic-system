@@ -16,6 +16,9 @@ MeanShift::MeanShift()
 void  MeanShift::Init_target_frame(const cv::Mat &frame,const cv::Rect &rect)
 {
     target_Region = rect;
+    kernel.create(rect.height, rect.width, CV_32F);
+    float kernel_sum = Epanechnikov_kernel(kernel);
+    kernel /= kernel_sum; // pre-scale kernel
     target_model = pdf_representation(frame,target_Region);
 }
 
@@ -42,9 +45,6 @@ float  MeanShift::Epanechnikov_kernel(cv::Mat &kernel)
 }
 cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect)
 {
-    cv::Mat kernel(rect.height,rect.width,CV_32F,cv::Scalar(0));
-    float normalized_C = 1.0 / Epanechnikov_kernel(kernel);
-
     cv::Mat pdf_model(8,16,CV_32F,cv::Scalar(1e-10));
 
     cv::Vec3b curr_pixel_value;
@@ -62,9 +62,9 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
             bin_value[0] = (curr_pixel_value[0]/bin_width);
             bin_value[1] = (curr_pixel_value[1]/bin_width);
             bin_value[2] = (curr_pixel_value[2]/bin_width);
-            pdf_model.at<float>(0,bin_value[0]) += kernel.at<float>(i,j)*normalized_C;
-            pdf_model.at<float>(1,bin_value[1]) += kernel.at<float>(i,j)*normalized_C;
-            pdf_model.at<float>(2,bin_value[2]) += kernel.at<float>(i,j)*normalized_C;
+            pdf_model.at<float>(0,bin_value[0]) += kernel.at<float>(i,j);
+            pdf_model.at<float>(1,bin_value[1]) += kernel.at<float>(i,j);
+            pdf_model.at<float>(2,bin_value[2]) += kernel.at<float>(i,j);
             clo_index++;
         }
         row_index++;
@@ -74,72 +74,61 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
 
 }
 
-cv::Mat MeanShift::CalWeight(const cv::Mat &frame, cv::Mat &target_model, 
-                    cv::Mat &target_candidate, cv::Rect &rec)
-{
-    int rows = rec.height;
-    int cols = rec.width;
-    int row_index = rec.y;
-    int col_index = rec.x;
-
-    cv::Mat weight(rows,cols,CV_32F,cv::Scalar(1.0000));
-    std::vector<cv::Mat> bgr_planes;
-    cv::split(frame, bgr_planes);
-
-    for(int k = 0; k < 3;  k++)
-    {
-        row_index = rec.y;
-        for(int i = 0; i < rows; i++)
-        {
-            col_index = rec.x;
-            for(int j = 0; j < cols; j++)
-            {
-                int curr_pixel = bgr_planes[k].at<uchar>(row_index, col_index);
-                int bin_value = curr_pixel / bin_width;
-                weight.at<float>(i,j) *= static_cast<float>((
-                    sqrt(
-                        target_model.at<float>(k, bin_value) / target_candidate.at<float>(k, bin_value)
-                    )
-                ));
-                col_index++;
-            }
-            row_index++;
-        }
-    }
-
-    return weight;
-}
-
 cv::Rect MeanShift::track(const cv::Mat &next_frame)
 {
     cv::Rect next_rect;
     for(int iter=0;iter<cfg.MaxIter;iter++)
     {
         cv::Mat target_candidate = pdf_representation(next_frame,target_Region);
-        cv::Mat weight = CalWeight(next_frame,target_model,target_candidate,target_Region);
 
         float delta_x = 0.0;
         float sum_wij = 0.0;
         float delta_y = 0.0;
-        float centre = static_cast<float>((weight.rows-1)/2.0);
-        double mult = 0.0;
+        float centre = static_cast<float>((target_Region.height-1)/2.0);
+//        double mult = 0.0;
 
         next_rect.x = target_Region.x;
         next_rect.y = target_Region.y;
         next_rect.width = target_Region.width;
         next_rect.height = target_Region.height;
 
-        for(int i=0;i<weight.rows;i++)
+        cv::Vec3f curr_pixel;
+        cv::Vec3f bin_value;
+
+        int row_index = target_Region.y;
+        for(int i=0;i<target_Region.height;i++)
         {
-            for(int j=0;j<weight.cols;j++)
+            float norm_i = static_cast<float>(i-centre)/centre;
+            float norm_i_sqr = norm_i*norm_i;
+            // since (0 <= i < weight.rows)
+            // it follows (-1 <= norm_i <= 1)
+            int col_index = target_Region.x;
+            for(int j=0;j<target_Region.width;j++)
             {
-                float norm_i = static_cast<float>(i-centre)/centre;
                 float norm_j = static_cast<float>(j-centre)/centre;
-                mult = pow(norm_i,2)+pow(norm_j,2)>1.0?0.0:1.0;
-                delta_x += static_cast<float>(norm_j*weight.at<float>(i,j)*mult);
-                delta_y += static_cast<float>(norm_i*weight.at<float>(i,j)*mult);
-                sum_wij += static_cast<float>(weight.at<float>(i,j)*mult);
+//                mult = pow(norm_i,2)+pow(norm_j,2)>1.0?0.0:1.0;
+                if (abs(norm_j) <= 1.0 && norm_i_sqr + norm_j * norm_j <= 1.0) {
+                    // calculate element of weight matrix (CalWeight)
+                    curr_pixel = next_frame.at<cv::Vec3b>(row_index,col_index);
+                    bin_value[0] = curr_pixel[0] / bin_width;
+                    bin_value[1] = curr_pixel[1] / bin_width;
+                    bin_value[2] = curr_pixel[2] / bin_width;
+                    float weight = target_model.at<float>(0, bin_value[0])
+                             / target_candidate.at<float>(0, bin_value[0]);
+                    weight *= target_model.at<float>(1, bin_value[1])
+                        / target_candidate.at<float>(1, bin_value[1]);
+                    weight = sqrt(
+                        weight * target_model.at<float>(2, bin_value[2])
+                           / target_candidate.at<float>(2, bin_value[2])
+                    );
+
+                    delta_x += static_cast<float>(norm_j * weight);
+                    delta_y += static_cast<float>(norm_i * weight);
+                    sum_wij += static_cast<float>(weight);
+                }
+                col_index++;
             }
+            row_index++;
         }
 
         next_rect.x += static_cast<int>((delta_x/sum_wij)*centre);
