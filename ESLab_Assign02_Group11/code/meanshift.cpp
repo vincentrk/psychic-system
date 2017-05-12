@@ -78,14 +78,17 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
 {
     cv::Mat pdf_model(3,cfg.num_bins,CV_32F,cv::Scalar(1e-10));
 
-    int kern_h = rect.height / 2;
-    int kern_w = rect.width / 2;
+    int height = rect.height;
+    int width = rect.width;
+
+    int kern_h = height / 2;
+    int kern_w = width / 2;
 
     int row_index = rect.y;
-    for(int i=0;i<rect.height;i++)
+    for(int i=0;i<height;i++)
     {
         int clo_index = rect.x;
-        for(int j=0;j<rect.width;j++)
+        for(int j=0;j<width;j++)
         {
             cv::Vec3b bin_value;
             cv::Vec3b curr_pixel_value = frame.at<cv::Vec3b>(row_index,clo_index);
@@ -133,15 +136,18 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         next_rect.width = target_Region.width;
         next_rect.height = target_Region.height;
 
+        int height = target_Region.height;
+        int width = target_Region.height;
+
         int row_index = target_Region.y;
-        for(int i=0;i<target_Region.height;i++)
+        for(int i=0;i<height;i++)
         {
             float norm_i = static_cast<float>(i-centre)/centre;
             float norm_i_sqr = norm_i*norm_i;
             // since (0 <= i < weight.rows)
             // it follows (-1 <= norm_i <= 1)
             int col_index = target_Region.x;
-            for(int j=0;j<target_Region.width;j++)
+            for(int j=0;j<width;j++)
             {
                 float norm_j = static_cast<float>(j-centre)/centre;
 //                mult = pow(norm_i,2)+pow(norm_j,2)>1.0?0.0:1.0;
