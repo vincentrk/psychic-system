@@ -85,7 +85,11 @@ int main(int argc, char ** argv)
     std::cout << "Time: " << totalTimer.GetTime() <<" sec\nFPS : " << fcount/totalTimer.GetTime() << std::endl;
 
     } // Destroy writer to flush output to file
+    #ifdef ARMCC
     std::cout << "4bf41e5572f56bfedb3182781e24d4ac  is expected...\n";
+    #else
+    std::cout << "051a524f68785b2f9c7fbb0754facb35  is expected...\n";
+    #endif
     system("md5sum tracking_result.avi");
 
     return 0;
