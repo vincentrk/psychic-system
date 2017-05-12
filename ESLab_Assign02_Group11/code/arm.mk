@@ -21,9 +21,13 @@ CFLAGS=$(DEFS) $(INCLUDES)          \
       -Uarm                         \
       -marm                         \
       -Wno-trigraphs                \
+			-ffast-math										\
+			-mfloat-abi=softfp						\
+			-ftree-vectorize							\
       -fno-strict-aliasing          \
       -fno-common                   \
       -fno-omit-frame-pointer       \
+			-mfpu=neon										\
       -mapcs                        \
       -mabi=aapcs-linux
 
@@ -34,7 +38,7 @@ $(EXEC): $(OBJS)
 	$(CC) -o $@ $(OBJS) $(LIBS) $(LDFLAGS)
 
 %.o : %.cpp
-	$(CC) $(CFLAGS) -c $< -o $@ 
+	$(CC) $(CFLAGS) -c $< -o $@
 
 send: $(EXEC)
 	scp $(EXEC) beagle.wijtemans.nl:/tmp/
