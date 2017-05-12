@@ -78,6 +78,9 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
 {
     cv::Mat pdf_model(3,cfg.num_bins,CV_32F,cv::Scalar(1e-10));
 
+    int kern_h = rect.height / 2;
+    int kern_w = rect.width / 2;
+
     cv::Vec3f curr_pixel_value;
     cv::Vec3f bin_value;
 
@@ -93,7 +96,7 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
             bin_value[0] = (curr_pixel_value[0]/bin_width);
             bin_value[1] = (curr_pixel_value[1]/bin_width);
             bin_value[2] = (curr_pixel_value[2]/bin_width);
-            float kernel_element = kernel_elem(i, j, rect.height, rect.width);
+            float kernel_element = kernel.at<float>(abs(i - kern_h), abs(j - kern_w));
             pdf_model.at<float>(0,bin_value[0]) += kernel_element;
             pdf_model.at<float>(1,bin_value[1]) += kernel_element;
             pdf_model.at<float>(2,bin_value[2]) += kernel_element;
