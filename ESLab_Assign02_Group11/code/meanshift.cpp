@@ -5,6 +5,18 @@
 
 #include"meanshift.h"
 
+void print_mat(cv::Mat &mat)
+{
+    int h = mat.rows;
+    int w = mat.cols;
+    for (int y=0; y<h; y++) {
+        for(int x=0; x<w; x++) {
+            std::cout << mat.at<float>(x, y) << " ";
+        }
+        std::cout << "\n";
+    }
+}
+
 MeanShift::MeanShift()
 {
     cfg.MaxIter = 8;
