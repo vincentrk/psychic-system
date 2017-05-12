@@ -116,7 +116,11 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
             {
                 float norm_j = static_cast<float>(j-centre)/centre;
 //                mult = pow(norm_i,2)+pow(norm_j,2)>1.0?0.0:1.0;
-                if (abs(norm_j) <= 1.0 && norm_i_sqr + norm_j * norm_j <= 1.0) {
+                if (norm_j > 1.0) {
+                    // norm_j grows lineairly with j, so it will be "too big" for the rest of the loop
+                    break;
+                }
+                if (norm_i_sqr + norm_j * norm_j <= 1.0) {
                     // calculate element of weight matrix (CalWeight)
                     curr_pixel = next_frame.at<cv::Vec3b>(row_index,col_index);
                     bin_value[0] = curr_pixel[0] / bin_width;
