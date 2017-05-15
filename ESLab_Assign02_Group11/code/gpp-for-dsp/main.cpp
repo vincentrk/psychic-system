@@ -4,11 +4,8 @@
 #include <iostream>
 
 #ifndef ARMCC
-#//include "markers.h"
+#include "markers.h"
 #endif
-
-#define MCPROF_START()
-#define MCPROF_STOP()
 
 int main(int argc, char ** argv)
 {
