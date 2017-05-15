@@ -2,14 +2,14 @@ SHELL = /bin/sh
 
 BASE_TOOLCHAIN := /opt/bbToolChain/usr/local/share/codesourcery/
 
-CC := arm-none-linux-gnueabi-g++
+CXX := arm-none-linux-gnueabi-g++
 
 DSPLINK := /opt/bbToolChain/usr/local/share/bbframework/platform/beagle-linux/tools/dsplink_linux_1_65_00_03
 
 #   ----------------------------------------------------------------------------
 #   General options, sources and libraries
 #   ----------------------------------------------------------------------------
-SRCS := pool_notify.c main.c meanshift.cpp
+CXXSRCS := main.cpp meanshift.cpp pool_notify.cpp 
 OBJS :=
 DEBUG :=
 LDFLAGS := -lpthread -lm --sysroot=/opt/rootfs
@@ -30,25 +30,25 @@ BIN := meanshift.gpp
 #   ----------------------------------------------------------------------------
 #   Compiler and Linker flags for Debug
 #   ----------------------------------------------------------------------------
-OBJDIR_D := Debug
-BINDIR_D := $(OBJDIR_D)
+OBJDIR_DXX := Debug
+BINDIR_D := $(OBJDIR_DXX)
 LIBS_D := $(DSPLINK)/gpp/BUILD/EXPORT/DEBUG/dsplink.lib $(LIBS)
 # If the DSP/Link was rebuilt by the user, replace the line above 
 # with the one below to use the updated libraries
 #LIBS_D := $(DSPLINK)/gpp/BUILD/EXPORT/DEBUG/dsplink.lib $(LIBS)
-OBJS_D := $(SRCS:%.c=$(OBJDIR_D)/%.o)
-ALL_DEBUG := -g -DDDSP_DEBUG $(DEBUG) -D__DEBUG -O1
+OBJS_D := $(CXXSRCS:%.cpp=$(OBJDIR_DXX)/%.o)
+ALL_DEBUG := -g -DDDSP_DEBUG $(DEBUG) -D__DEBUG
 
 #   ----------------------------------------------------------------------------
 #   Compiler and Linker flags for Release
 #   ----------------------------------------------------------------------------
-OBJDIR_R := Release
-BINDIR_R := $(OBJDIR_R)
+OBJDIR_RXX := Release
+BINDIR_R := $(OBJDIR_RXX)
 #LIBS_R := $(DSPLINK)/gpp/export/BIN/Linux/OMAPL1XX/RELEASE/dsplink.lib $(LIBS)
 # If the DSP/Link was rebuilt by the user, replace the line above 
 # with the one below to use the updated libraries
 LIBS_R := $(DSPLINK)/gpp/BUILD/EXPORT/RELEASE/dsplink.lib $(LIBS)
-OBJS_R := $(SRCS:%.c=$(OBJDIR_R)/%.o)
+OBJS_R := $(CXXSRCS:%.cpp=$(OBJDIR_RXX)/%.o)
 
 #   ----------------------------------------------------------------------------
 #   Compiler include directories 
@@ -82,6 +82,7 @@ ALL_CFLAGS := $(INCLUDES)                   \
               -ftree-vectorize              \
               -ffast-math                   \
               -funsafe-math-optimizations   \
+              -funroll-loops                \
               $(CFLAGS)
 
 #   ----------------------------------------------------------------------------
@@ -123,11 +124,11 @@ all: Debug Release
 Debug: $(BINDIR_D)/$(BIN)
 
 $(BINDIR_D)/$(BIN): $(OBJS_D)
-	@echo Compiling Debug...
-	@$(BASE_TOOLCHAIN)/bin/$(CC) -o $@ $(OBJS_D) $(LIBS_D) $(LDFLAGS)
+	echo Compiling Debug...
+	$(BASE_TOOLCHAIN)/bin/$(CXX) -o $@ $(OBJS_D) $(LIBS_D) $(LDFLAGS)
 
-$(OBJDIR_D)/%.o : %.cpp
-	@$(BASE_TOOLCHAIN)/bin/$(CC) $(DEFS) $(ALL_CFLAGS) $(ALL_DEBUG) -o$@ $<
+$(OBJDIR_DXX)/%.o : %.cpp
+	$(BASE_TOOLCHAIN)/bin/$(CXX) $(ALL_DEBUG) $(DEFS) $(ALL_CFLAGS) -o$@ $<
 
 #   ----------------------------------------------------------------------------
 #   Building Release... 
@@ -136,16 +137,13 @@ $(OBJDIR_D)/%.o : %.cpp
 Release: $(BINDIR_R)/$(BIN)
 
 $(BINDIR_R)/$(BIN): $(OBJS_R)
-	@echo Compiling Release...
-	@$(BASE_TOOLCHAIN)/bin/$(CC) -o $@ $(OBJS_R) $(LIBS_R) $(LDFLAGS)
+	echo Compiling Release...
+	$(BASE_TOOLCHAIN)/bin/$(CXX) -o $@ $(OBJS_R) $(LIBS_R) $(LDFLAGS)
 
-$(OBJDIR_R)/%.o : %.cpp
-	@$(BASE_TOOLCHAIN)/bin/$(CC) $(DEFS) $(ALL_CFLAGS) -o$@ $<
+$(OBJDIR_RXX)/%.o : %.cpp
+	$(BASE_TOOLCHAIN)/bin/$(CXX) $(DEFS) $(ALL_CFLAGS) -o$@ $<
 
 .PHONY: clean
 clean:
-	@rm -f $(OBJDIR_D)/*
-	@rm -f $(OBJDIR_R)/* *~
-
-send: $(BINDIR_R)/$(BIN)
-	scp $(BINDIR_R)/$(BIN) root@192.168.0.202:/home/root/esLAB/pool_notify/.
+	@rm -f $(OBJDIR_DXX)/*
+	@rm -f $(OBJDIR_RXX)/*
