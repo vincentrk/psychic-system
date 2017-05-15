@@ -117,6 +117,8 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
     cv::Mat target_ratio(3, cfg.num_bins, CV_32F);
     cv::Rect next_rect;
 
+    pool_notify_Execute(0, 0);
+
     for(int iter=0;iter<cfg.MaxIter;iter++)
     {
         cv::Mat target_candidate = pdf_representation(next_frame,target_Region);
