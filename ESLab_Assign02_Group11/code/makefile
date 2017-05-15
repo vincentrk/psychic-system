@@ -1,7 +1,7 @@
 GPP_DIR=gpp-for-dsp
 DSP_DIR=dsp
-EXEC_GPP=$(GPP_DIR)/Debug/meanshift.gpp
-EXEC_DSP=$(DSP_DIR)/Debug/meanshift.dsp
+EXEC_GPP=$(GPP_DIR)/Release/meanshift.gpp
+EXEC_DSP=$(DSP_DIR)/Release/meanshift.dsp
 
 all: gpp dsp
 

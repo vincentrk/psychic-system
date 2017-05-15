@@ -37,7 +37,7 @@ LIBS_D := $(DSPLINK)/gpp/BUILD/EXPORT/DEBUG/dsplink.lib $(LIBS)
 # with the one below to use the updated libraries
 #LIBS_D := $(DSPLINK)/gpp/BUILD/EXPORT/DEBUG/dsplink.lib $(LIBS)
 OBJS_D := $(SRCS:%.c=$(OBJDIR_D)/%.o)
-ALL_DEBUG := -g -DDDSP_DEBUG $(DEBUG) -D__DEBUG
+ALL_DEBUG := -g -DDDSP_DEBUG $(DEBUG) -D__DEBUG -O1
 
 #   ----------------------------------------------------------------------------
 #   Compiler and Linker flags for Release
@@ -66,18 +66,22 @@ INCLUDES := -I$(DSPLINK)/gpp/inc                   \
 ALL_CFLAGS := $(INCLUDES)                   \
               -mlittle-endian               \
               -march=armv5t                 \
-              -mtune=arm9tdmi               \
-              -msoft-float                  \
+              -mtune=cortex-a8              \
               -Uarm                         \
               -marm -Wall                   \
               -Wno-trigraphs                \
               -fno-strict-aliasing          \
               -fno-common                   \
-              -fno-omit-frame-pointer       \
+              -fomit-frame-pointer          \
               -mapcs                        \
               -c                            \
               -mabi=aapcs-linux             \
-              -O                            \
+              -O3                           \
+              -mfpu=neon                    \
+              -mfloat-abi=softfp            \
+              -ftree-vectorize              \
+              -ffast-math                   \
+              -funsafe-math-optimizations   \
               $(CFLAGS)
 
 #   ----------------------------------------------------------------------------
@@ -123,7 +127,7 @@ $(BINDIR_D)/$(BIN): $(OBJS_D)
 	@$(BASE_TOOLCHAIN)/bin/$(CC) -o $@ $(OBJS_D) $(LIBS_D) $(LDFLAGS)
 
 $(OBJDIR_D)/%.o : %.cpp
-	@$(BASE_TOOLCHAIN)/bin/$(CC) $(ALL_DEBUG) $(DEFS) $(ALL_CFLAGS) -o$@ $<
+	@$(BASE_TOOLCHAIN)/bin/$(CC) $(DEFS) $(ALL_CFLAGS) $(ALL_DEBUG) -o$@ $<
 
 #   ----------------------------------------------------------------------------
 #   Building Release... 
