@@ -1,0 +1,73 @@
+# Calling order from gpp:
+pool_notify_Main(dspExecutable, strBufferSize)
+	pool_notify_Create(dspExecutable, strBufferSize)
+		sem_init
+		PROC_setup
+		PROC_attach
+		POOL_open
+		POOL_alloc
+		POOL_translateAddr
+		NOTIFY_register(pool_notify_Notify)
+		PROC_load(dspExecutable, strBufferSize)
+		PROC_start
+>A		sem_wait
+<B		NOTIFY_notify(dspDataBuf)
+<C		NOTIFY_notify(pool_notify_BufferSize)
+
+pool_notify_Execute
+	POOL_writeback
+<D	NOTIFY_notify(1)
+>E	sem_wait
+	POOL_invalidate
+
+pool_notify_delete
+	PROC_stop
+	NOTIFY_unregister
+	POOL_free
+	POOL_close
+	PROC_detach
+	PROC_destroy
+
+pool_notify_Notify(info)
+	if (info == 0)
+		sem_post
+	else
+F>		print "Result: %d", info
+
+# Calling order from dsp:
+main(strBufferSize)
+	DSPLINK_init
+	global MPCSXFER_BufferSize = align(strBufferSize)
+	TSK_create(Task)
+
+Task
+	Task_create(&info)
+		info = MEM_calloc
+		info->dataBuf = NULL
+		info->bufferSize = MPCSXFER_BufferSize
+		SEM_new
+		NOTIFY_register(Task_notify)
+<A		NOTIFY_notify(0)
+>B		SEM_pend
+>C		SEM_pend
+	Task_execute
+>D		SEM_pend(info->semObj)
+		global buf, length
+		BCACHE_inv(buf, length)
+		do_things
+		BCACHE_wb()
+<E		NOTIFY_notify(0)
+<F		NOTIFY_notify(result)
+	Task_delete
+		NOTIFY_unregister(Task_notify)
+		MEM_free(info)
+
+Task_notify(task, info)
+	static count = 0
+	count++
+	if (count == 1)
+>B		global buf = (uchar*) info
+	if (count == 2)
+>C		global length = (int) info
+	SEM_post(task->SemObj)
+
