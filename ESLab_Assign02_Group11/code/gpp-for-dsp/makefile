@@ -108,7 +108,8 @@ DEFS :=        -DOS_LINUX            \
                -DKFILE_DEFAULT       \
                -DDA8XXGEM            \
                -DDA8XXGEM_PHYINTERFACE=SHMEM_INTERFACE \
-               -DARMCC
+               -DARMCC               \
+               -DDSP
 
 #   ----------------------------------------------------------------------------
 #   Compiler and Linker procedure

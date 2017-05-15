@@ -98,33 +98,23 @@ Int Task_create (Task_TransferInfo ** infoPtr)
 unsigned char* buf;
 int length;
 
-int sum_dsp() 
-{
-    int sum=0,i;
-    for(i=0;i<length;i++) 
-	{
-       sum=sum+buf[i];
-    }
-    return sum;
-}
-
 Int Task_execute (Task_TransferInfo * info)
 {
-    int sum;
+	while (true) {
+		//wait for semaphore
+		SEM_pend (&(info->notifySemObj), SYS_FOREVER);
 
-    //wait for semaphore
-	SEM_pend (&(info->notifySemObj), SYS_FOREVER);
+		//invalidate cache
+		BCACHE_inv ((Ptr)buf, length, TRUE) ;
 
-	//invalidate cache
-    BCACHE_inv ((Ptr)buf, length, TRUE) ;
+		//call the functionality to be performed by dsp
 
-	//call the functionality to be performed by dsp
-    sum = sum_dsp();
-    
-	//notify that we are done
-    NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)0);
-	//notify the result
-    NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)sum);
+		//write back to main memory
+		BCACHE_wb ((Ptr)buf, length, TRUE) ;
+
+		//notify that we are done
+		NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)0);
+	}
 
     return SYS_OK;
 }

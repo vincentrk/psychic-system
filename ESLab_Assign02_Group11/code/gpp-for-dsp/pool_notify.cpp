@@ -311,16 +311,6 @@ NORMAL_API DSP_STATUS pool_notify_Create (	IN Char8 * dspExecutable,
     return status ;
 }
 
-void unit_init(void) 
-{
-    unsigned int i;
-
-    // Initialize the array with something
-    for(i=0;i<pool_notify_BufferSize;i++) {
-       pool_notify_DataBuf[i] = i % 20 + i % 5;
-    }
-}
-
 #include <sys/time.h>
 
 long long get_usec(void);
@@ -334,15 +324,6 @@ long long get_usec(void)
   return r;
 }
 
-int sum_dsp(unsigned char* buf, int length) 
-{
-    int a=0,i;
-    for(i=0;i<length;i++) 
-	{
-       a=a+buf[i];
-    }
-    return a;
-}
 
 /** ============================================================================
  *  @func   pool_notify_Execute
@@ -354,40 +335,36 @@ int sum_dsp(unsigned char* buf, int length)
  */
 NORMAL_API DSP_STATUS pool_notify_Execute (IN Uint32 numIterations, Uint8 processorId)
 {
-    DSP_STATUS  status    = DSP_SOK ;
-
-    long long start;
-
-//	#if defined(DSP)
-//    unsigned char *buf_dsp;
-//	#endif
+	DSP_STATUS  status    = DSP_SOK ;
+	long long start;
 
 	#ifdef DEBUG
-    printf ("Entered pool_notify_Execute ()\n") ;
+	printf ("Entered pool_notify_Execute ()\n") ;
 	#endif
 
-    unit_init();
-
-    start = get_usec();
-
-	#if !defined(DSP)
-    printf(" Result is %d \n", sum_dsp(pool_notify_DataBuf,pool_notify_BufferSize));
-	#endif
+	start = get_usec();
 
 	#if defined(DSP)
-    POOL_writeback (POOL_makePoolId(processorId, SAMPLE_POOL_ID),
-                    pool_notify_DataBuf,
-                    pool_notify_BufferSize);
-    NOTIFY_notify (processorId,pool_notify_IPS_ID,pool_notify_IPS_EVENTNO,1);
-    sem_wait(&sem);
-    POOL_invalidate (POOL_makePoolId(processorId, SAMPLE_POOL_ID),
-                    pool_notify_DataBuf,
-                    pool_notify_BufferSize);
+	// Write to main memory
+	POOL_writeback (POOL_makePoolId(processorId, SAMPLE_POOL_ID),
+	               pool_notify_DataBuf,
+	               pool_notify_BufferSize);
+
+	// Notify DSP
+	NOTIFY_notify (processorId,pool_notify_IPS_ID,pool_notify_IPS_EVENTNO,1);
+
+	// Wait for signal from DSP
+	sem_wait(&sem);
+
+	// Invalidate cache
+	POOL_invalidate (POOL_makePoolId(processorId, SAMPLE_POOL_ID),
+	               pool_notify_DataBuf,
+	               pool_notify_BufferSize);
 	#endif
 
-    printf("Sum execution time %lld us.\n", get_usec()-start);
+	printf("DSP execution time %lld us.\n", get_usec()-start);
 
-    return status ;
+	return status ;
 }
 
 
@@ -563,10 +540,6 @@ STATIC Void pool_notify_Notify (Uint32 eventNo, Pvoid arg, Pvoid info)
     if((int)info==0) 
 	{
         sem_post(&sem);
-    } 
-    else 
-	{
-        printf(" Result on DSP is %d \n", (int)info);
     }
 }
 
