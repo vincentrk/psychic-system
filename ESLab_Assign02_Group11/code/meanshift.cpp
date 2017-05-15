@@ -34,8 +34,8 @@ void  MeanShift::Init_target_frame(const cv::Mat &frame,const cv::Rect &rect)
 }
 
 float & MeanShift::kernel_elem(int row, int col, int height, int width) {
-    int nrow = abs(row - height / 2);
-    int ncol = abs(col - width / 2);
+    int nrow = abs(row - (height >> 1));
+    int ncol = abs(col - (width >> 1));
     return (kernel.at<float>(nrow, ncol));
 }
 
@@ -56,7 +56,7 @@ float  MeanShift::Epanechnikov_kernel(cv::Mat &kernel, int h, int w)
      */
     // Halve the size, round up, add one for the zero row
     // (x+1+1)/2 == x/2+1
-    kernel.create(h/2+1, w/2+1, CV_32F);
+    kernel.create((h>>1)+1, (w>>1)+1, CV_32F);
     std::cout << "kernel size: " << h << ";" << w << "\n";
 
     float kernel_sum = 0.0;
@@ -64,9 +64,9 @@ float  MeanShift::Epanechnikov_kernel(cv::Mat &kernel, int h, int w)
     {
         for(int j=0;j<w;j++)
         {
-            float x = static_cast<float>(i - h/2);
-            float  y = static_cast<float> (j - w/2);
-            float norm_x = x*x/(h*h/4)+y*y/(w*w/4);
+            float x = static_cast<float>(i - (h>>1));
+            float  y = static_cast<float> (j - (w>>1));
+            float norm_x = x*x/((h*h)/4)+y*y/((w*w)/4);
             float result =norm_x<1?(1.0-norm_x):0;
             kernel_elem(i, j, h, w) = result;
             kernel_sum += result;
@@ -81,8 +81,8 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
     int height = rect.height;
     int width = rect.width;
 
-    int kern_h = height / 2;
-    int kern_w = width / 2;
+    int kern_h = height >> 1;
+    int kern_w = width >> 1;
 
     float * plane_a = pdf_model.ptr<float>(0);
     float * plane_b = pdf_model.ptr<float>(1);
@@ -132,7 +132,7 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         float delta_x = 0.0;
         float sum_wij = 0.0;
         float delta_y = 0.0;
-        float centre = static_cast<float>((target_Region.height-1)/2.0);
+        float centre = static_cast<float>((target_Region.height-1) / 2.0);
 //        double mult = 0.0;
 
         next_rect.x = target_Region.x;
