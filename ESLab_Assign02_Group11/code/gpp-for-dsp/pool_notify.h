@@ -132,7 +132,7 @@ pool_notify_Delete (IN Uint8 processorId) ;
  *  ============================================================================
  */
 NORMAL_API
-Void
+int
 pool_notify_Main (IN Char8 * dspExecutable,
                IN Char8 * strBufferSize) ;
 

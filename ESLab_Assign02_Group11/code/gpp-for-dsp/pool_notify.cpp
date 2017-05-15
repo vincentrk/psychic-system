@@ -20,11 +20,6 @@
 //#include <pool_notify_os.h>
 
 
-#if defined (__cplusplus)
-extern "C" {
-#endif /* defined (__cplusplus) */
-
-
 /*  ============================================================================
  *  @const   NUM_ARGS
  *
@@ -91,13 +86,6 @@ extern "C" {
  */
 STATIC Uint32  pool_notify_BufferSize ;
 
-/*  ============================================================================
- *  @name   pool_notify_NumIterations
- *
- *  @desc   Number of iterations of data transfer.
- *  ============================================================================
- */
-STATIC Uint32  pool_notify_NumIterations ;
 
 /** ============================================================================
  *  @name   pool_notify_DataBuf
@@ -370,9 +358,9 @@ NORMAL_API DSP_STATUS pool_notify_Execute (IN Uint32 numIterations, Uint8 proces
 
     long long start;
 
-	#if defined(DSP)
-    unsigned char *buf_dsp;
-	#endif
+//	#if defined(DSP)
+//    unsigned char *buf_dsp;
+//	#endif
 
 	#ifdef DEBUG
     printf ("Entered pool_notify_Execute ()\n") ;
@@ -390,15 +378,11 @@ NORMAL_API DSP_STATUS pool_notify_Execute (IN Uint32 numIterations, Uint8 proces
     POOL_writeback (POOL_makePoolId(processorId, SAMPLE_POOL_ID),
                     pool_notify_DataBuf,
                     pool_notify_BufferSize);
-
-    POOL_translateAddr ( POOL_makePoolId(processorId, SAMPLE_POOL_ID),
-                         (void*)&buf_dsp,
-                         AddrType_Dsp,
-                         (Void *) pool_notify_DataBuf,
-                         AddrType_Usr) ;
     NOTIFY_notify (processorId,pool_notify_IPS_ID,pool_notify_IPS_EVENTNO,1);
-
     sem_wait(&sem);
+    POOL_invalidate (POOL_makePoolId(processorId, SAMPLE_POOL_ID),
+                    pool_notify_DataBuf,
+                    pool_notify_BufferSize);
 	#endif
 
     printf("Sum execution time %lld us.\n", get_usec()-start);
@@ -503,8 +487,9 @@ NORMAL_API Void pool_notify_Delete (Uint8 processorId)
  *  @modif  None
  *  ============================================================================
  */
-NORMAL_API Void pool_notify_Main (IN Char8 * dspExecutable, IN Char8 * strBufferSize)
+NORMAL_API int pool_notify_Main (IN Char8 * dspExecutable, IN Char8 * strBufferSize)
 {
+    int ret = 0;
     DSP_STATUS status       = DSP_SOK ;
     Uint8      processorId  = 0 ;
 
@@ -541,10 +526,11 @@ NORMAL_API Void pool_notify_Main (IN Char8 * dspExecutable, IN Char8 * strBuffer
 
         if (DSP_SUCCEEDED (status)) 
 		{
-            status = pool_notify_Execute (pool_notify_NumIterations, 0) ;
+            ret = 1;
+//            status = pool_notify_Execute (pool_notify_NumIterations, 0) ;
         }
 
-         pool_notify_Delete (processorId) ;
+//         pool_notify_Delete (processorId) ;
         
     }
     else 
@@ -555,6 +541,7 @@ NORMAL_API Void pool_notify_Main (IN Char8 * dspExecutable, IN Char8 * strBuffer
     }
 
     printf ("====================================================\n") ;
+    return ret;
 }
 
 /** ----------------------------------------------------------------------------
@@ -583,7 +570,3 @@ STATIC Void pool_notify_Notify (Uint32 eventNo, Pvoid arg, Pvoid info)
     }
 }
 
-
-#if defined (__cplusplus)
-}
-#endif /* defined (__cplusplus) */

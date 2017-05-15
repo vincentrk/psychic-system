@@ -2,19 +2,29 @@ SHELL = /bin/sh
 
 BASE_TOOLCHAIN := /opt/bbToolChain/usr/local/share/codesourcery/
 
-CC := arm-none-linux-gnueabi-gcc
+CC := arm-none-linux-gnueabi-g++
 
 DSPLINK := /opt/bbToolChain/usr/local/share/bbframework/platform/beagle-linux/tools/dsplink_linux_1_65_00_03
 
 #   ----------------------------------------------------------------------------
 #   General options, sources and libraries
 #   ----------------------------------------------------------------------------
-SRCS := pool_notify.c gpp_main.c
+SRCS := pool_notify.c main.c meanshift.cpp
 OBJS :=
 DEBUG :=
-LDFLAGS := -lpthread -lm -static
-CFLAGS := -DDSP -DDEBUG
-LIBS :=
+LDFLAGS := -lpthread -lm --sysroot=/opt/rootfs
+CFLAGS := -DDSP -DDEBUG --sysroot=/opt/rootfs
+LIBS := -lopencv_core
+LIBS += -lopencv_imgproc
+LIBS += -lopencv_highgui
+LIBS += -lopencv_ml
+LIBS += -lopencv_video
+LIBS += -lopencv_features2d
+LIBS += -lopencv_calib3d
+LIBS += -lopencv_objdetect
+LIBS += -lopencv_contrib
+LIBS += -lopencv_legacy
+LIBS += -lopencv_flann
 BIN := meanshift.gpp
 
 #   ----------------------------------------------------------------------------
@@ -59,9 +69,7 @@ ALL_CFLAGS := $(INCLUDES)                   \
               -mtune=arm9tdmi               \
               -msoft-float                  \
               -Uarm                         \
-              -Wdeclaration-after-statement \
               -marm -Wall                   \
-              -Wstrict-prototypes           \
               -Wno-trigraphs                \
               -fno-strict-aliasing          \
               -fno-common                   \
@@ -113,7 +121,7 @@ $(BINDIR_D)/$(BIN): $(OBJS_D)
 	@echo Compiling Debug...
 	@$(BASE_TOOLCHAIN)/bin/$(CC) -o $@ $(OBJS_D) $(LIBS_D) $(LDFLAGS)
 
-$(OBJDIR_D)/%.o : %.c
+$(OBJDIR_D)/%.o : %.cpp
 	@$(BASE_TOOLCHAIN)/bin/$(CC) $(ALL_DEBUG) $(DEFS) $(ALL_CFLAGS) -o$@ $<
 
 #   ----------------------------------------------------------------------------
@@ -126,7 +134,7 @@ $(BINDIR_R)/$(BIN): $(OBJS_R)
 	@echo Compiling Release...
 	@$(BASE_TOOLCHAIN)/bin/$(CC) -o $@ $(OBJS_R) $(LIBS_R) $(LDFLAGS)
 
-$(OBJDIR_R)/%.o : %.c
+$(OBJDIR_R)/%.o : %.cpp
 	@$(BASE_TOOLCHAIN)/bin/$(CC) $(DEFS) $(ALL_CFLAGS) -o$@ $<
 
 .PHONY: clean
