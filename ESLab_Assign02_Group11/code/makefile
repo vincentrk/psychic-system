@@ -1,19 +1,21 @@
-EXEC_GPP=gpp/Release/meanshift.gpp
-EXEC_DSP=dsp/meanshift.dsp
+GPP_DIR=gpp-for-dsp
+DSP_DIR=dsp
+EXEC_GPP=$(GPP_DIR)/Debug/meanshift.gpp
+EXEC_DSP=$(DSP_DIR)/Debug/meanshift.dsp
 
 all: gpp dsp
 
 gpp:
-	$(MAKE) -C gpp
+	$(MAKE) -C $(GPP_DIR)
 
 dsp:
-	$(MAKE) -C dsp
+	$(MAKE) -C $(DSP_DIR)
 
 send: all
-	scp $(EXEC_GPP) $(EXEC_DSP) beagle.wijtemans.nl:/tmp/
+	scp $(EXEC_GPP) $(EXEC_DSP) $(GPP_DIR)/run.sh beagle.wijtemans.nl:/tmp/
 
 .PHONY: clean all send gpp dsp
 clean:
 	$(MAKE) -C dsp clean
-	$(MAKE) -C gpp clean
+	$(MAKE) -C $(GPP_DIR) clean
 

@@ -35,7 +35,7 @@ OBJS :=
 LIBS := -ldsplink.lib -ldsplinkpool.lib -ldsplinkmpcs.lib -ldsplinkmplist.lib -ldsplinkmsg.lib -ldsplinknotify.lib -ldsplinkringio.lib -ldsplinkdata.lib
 CMDS := $(PROJNAME).cmd
 MAPFILE := $(PROJNAME).map
-BIN := $(PROJNAME).out
+BIN := meanshift.dsp
 
 #   ----------------------------------------------------------------------------
 #   DSP/BIOS generated files
