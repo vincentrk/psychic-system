@@ -13,7 +13,7 @@ CXXSRCS := main.cpp meanshift.cpp pool_notify.cpp
 OBJS :=
 DEBUG :=
 LDFLAGS := -lpthread -lm --sysroot=/opt/rootfs
-CFLAGS := -DDSP -DDEBUG --sysroot=/opt/rootfs
+CFLAGS := -DDSP --sysroot=/opt/rootfs
 LIBS := -lopencv_core
 LIBS += -lopencv_imgproc
 LIBS += -lopencv_highgui
@@ -37,7 +37,7 @@ LIBS_D := $(DSPLINK)/gpp/BUILD/EXPORT/DEBUG/dsplink.lib $(LIBS)
 # with the one below to use the updated libraries
 #LIBS_D := $(DSPLINK)/gpp/BUILD/EXPORT/DEBUG/dsplink.lib $(LIBS)
 OBJS_D := $(CXXSRCS:%.cpp=$(OBJDIR_DXX)/%.o)
-ALL_DEBUG := -g -DDDSP_DEBUG $(DEBUG) -D__DEBUG
+ALL_DEBUG := -g -DDDSP_DEBUG $(DEBUG) -D__DEBUG -DDEBUG
 
 #   ----------------------------------------------------------------------------
 #   Compiler and Linker flags for Release
