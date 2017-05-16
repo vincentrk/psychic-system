@@ -100,7 +100,7 @@ int length;
 
 Int Task_execute (Task_TransferInfo * info)
 {
-	while (true) {
+	while (TRUE) {
 		//wait for semaphore
 		SEM_pend (&(info->notifySemObj), SYS_FOREVER);
 
