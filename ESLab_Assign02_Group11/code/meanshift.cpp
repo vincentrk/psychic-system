@@ -137,7 +137,7 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         next_rect.height = target_Region.height;
 
         int height = target_Region.height;
-        int width = target_Region.height;
+        int width = target_Region.width;
 
         int row_index = target_Region.y;
         for(int i=0;i<height;i++)
