@@ -333,18 +333,25 @@ long long get_usec(void)
  *  @modif  None
  *  ============================================================================
  */
-NORMAL_API DSP_STATUS pool_notify_Execute (IN Uint32 numIterations, Uint8 processorId)
+int * pool_notify_GetBuf()
 {
+	return (int *) pool_notify_DataBuf;
+}
+unsigned int pool_notify_GetSize()
+{
+	return pool_notify_BufferSize;
+}
+NORMAL_API DSP_STATUS pool_notify_Execute ()
+{
+	Uint8 processorId = 0;
 	DSP_STATUS  status    = DSP_SOK ;
-	long long start;
 
 	#ifdef DEBUG
 	printf ("Entered pool_notify_Execute ()\n") ;
 	#endif
 
-	start = get_usec();
-
 	#if defined(DSP)
+
 	// Write to main memory
 	POOL_writeback (POOL_makePoolId(processorId, SAMPLE_POOL_ID),
 	               pool_notify_DataBuf,
@@ -353,6 +360,17 @@ NORMAL_API DSP_STATUS pool_notify_Execute (IN Uint32 numIterations, Uint8 proces
 	// Notify DSP
 	NOTIFY_notify (processorId,pool_notify_IPS_ID,pool_notify_IPS_EVENTNO,1);
 
+	#endif
+
+	return status ;
+}
+NORMAL_API DSP_STATUS pool_notify_Result ()
+{
+	Uint8 processorId = 0;
+	DSP_STATUS  status    = DSP_SOK ;
+
+	#if defined(DSP)
+
 	// Wait for signal from DSP
 	sem_wait(&sem);
 
@@ -360,14 +378,10 @@ NORMAL_API DSP_STATUS pool_notify_Execute (IN Uint32 numIterations, Uint8 proces
 	POOL_invalidate (POOL_makePoolId(processorId, SAMPLE_POOL_ID),
 	               pool_notify_DataBuf,
 	               pool_notify_BufferSize);
-	#endif
 
-	printf("DSP execution time %lld us.\n", get_usec()-start);
-
-	return status ;
+   #endif
+   return status;
 }
-
-
 /** ============================================================================
  *  @func   pool_notify_Delete
  *

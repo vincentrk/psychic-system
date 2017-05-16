@@ -119,8 +119,6 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
     cv::Mat target_ratio(3, cfg.num_bins, CV_32F);
     cv::Rect next_rect;
 
-    pool_notify_Execute(0, 0);
-
     for(int iter=0;iter<cfg.MaxIter;iter++)
     {
         cv::Mat target_candidate = pdf_representation(next_frame,target_Region);
@@ -152,7 +150,48 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         float * plane_b = target_ratio.ptr<float>(1);
         float * plane_c = target_ratio.ptr<float>(2);
 
+        // Set up data for DSP
+        unsigned int buf_size = pool_notify_GetSize();
+        int   * bufi = pool_notify_GetBuf();
+        float * buff = (float *) bufi;
+
+        unsigned int need =
+                   sizeof(int)  * 3
+                 + sizeof(float)* 1
+                 + sizeof(float)* 3 * cfg.num_bins
+                 + sizeof(char) * 4 * height * width;
+        if (buf_size < need) {
+            std::cout << "Error: buffer size too small, need " << need << "\n";
+            return next_rect;
+        }
+
+        // input: dimensions, bins, bin_width, target_ratio, frame-cutout
+        // assume float, int are 32 bits
+        int n = 0;
+        bufi[n++] = height;
+        bufi[n++] = width;
+        bufi[n++] = cfg.num_bins;
+        buff[n++] = bin_width;
+        for (int k=0; k<3; k++) {
+            for (int b=0; b<cfg.num_bins; b++) {
+                buff[n++] = target_ratio.at<float>(k, b);
+            }
+        }
+        unsigned char * buf_frame = (unsigned char *) &bufi[n];
         int row_index = target_Region.y;
+        for (int i=0; i<height; i++) {
+            int col_index = target_Region.x;
+            for (int j=0; j<width; j++) {
+                cv::Vec3b curr_pixel = next_frame.at<cv::Vec3b>(row_index, col_index);
+                buf_frame[n++] = curr_pixel[0];
+                buf_frame[n++] = curr_pixel[1];
+                buf_frame[n++] = curr_pixel[2];
+            }
+        }
+
+        pool_notify_Execute();
+
+        row_index = target_Region.y;
         for(int i=0;i<height;i++)
         {
             float norm_i = static_cast<float>(i-centre)/centre;
@@ -185,8 +224,12 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
             row_index++;
         }
 
-        next_rect.x += static_cast<int>((delta_x/sum_wij)*centre);
-        next_rect.y += static_cast<int>((delta_y/sum_wij)*centre);
+        pool_notify_Result();
+
+        //next_rect.x += static_cast<int>((delta_x/sum_wij)*centre);
+        //next_rect.y += static_cast<int>((delta_y/sum_wij)*centre);
+        next_rect.x += static_cast<int>(buff[1]);
+        next_rect.y += static_cast<int>(buff[2]);
 
         if(abs(next_rect.x-target_Region.x)<1 && abs(next_rect.y-target_Region.y)<1)
         {

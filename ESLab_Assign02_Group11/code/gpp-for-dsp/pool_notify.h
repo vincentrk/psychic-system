@@ -72,10 +72,16 @@ pool_notify_Create (IN Char8 * dspExecutable,
  *  @see    pool_notify_Delete , pool_notify_Create
  *  ============================================================================
  */
+int * pool_notify_GetBuf();
+unsigned int pool_notify_GetSize();
+
 NORMAL_API
 DSP_STATUS
-pool_notify_Execute (IN Uint32 numIterations, IN Uint8 processorId) ;
+pool_notify_Execute () ;
 
+NORMAL_API
+DSP_STATUS
+pool_notify_Result () ;
 
 /** ============================================================================
  *  @func   pool_notify_Delete
