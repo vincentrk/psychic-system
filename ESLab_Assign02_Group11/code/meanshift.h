@@ -10,7 +10,7 @@
 class MeanShift
 {
  private:
-    float bin_width;
+    int bin_width;
     cv::Mat target_model;
     cv::Rect target_Region;
     cv::Mat kernel;
