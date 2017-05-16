@@ -58,8 +58,8 @@ Host beagle.wijtemans.nl
 `ssh eslab@pi.wijtemans.nl`
 
 ECDSA  
-SHA256:yFyWp3rWRR67P3BfKla5+q40zbj7yy6l0z+HjcC/hEk.  
-MD5:7e:f8:f0:97:70:b2:5f:50:a7:f2:4f:f5:c3:4c:80:48.
+SHA256:77D0X4tz8inuztflcTBKTnTgEVFmii4zyL4yulPbAyk.  
+MD5:c2:25:09:79:f8:7c:9b:1f:0e:ca:47:52:71:0a:fd:8e.
 
 ### Lab server
 With VPN:  
