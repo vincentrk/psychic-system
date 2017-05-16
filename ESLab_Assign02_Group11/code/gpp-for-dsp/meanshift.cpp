@@ -23,6 +23,7 @@ MeanShift::MeanShift()
     cfg.num_bins = 16;
     cfg.piexl_range = 256;
     bin_width = cfg.piexl_range / cfg.num_bins;
+    bin_width = 1/ bin_width;
 }
 
 void  MeanShift::Init_target_frame(const cv::Mat &frame,const cv::Rect &rect)
@@ -96,9 +97,9 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
         {
             cv::Vec3b bin_value;
             cv::Vec3b curr_pixel_value = frame.at<cv::Vec3b>(row_index,clo_index);
-            bin_value[0] = (curr_pixel_value[0]/bin_width);
-            bin_value[1] = (curr_pixel_value[1]/bin_width);
-            bin_value[2] = (curr_pixel_value[2]/bin_width);
+            bin_value[0] = (curr_pixel_value[0]*bin_width);
+            bin_value[1] = (curr_pixel_value[1]*bin_width);
+            bin_value[2] = (curr_pixel_value[2]*bin_width);
             float kernel_element = kernel.at<float>(abs(i - kern_h), abs(j - kern_w));
             plane_a[bin_value[0]] += kernel_element;
             plane_b[bin_value[1]] += kernel_element;
@@ -169,9 +170,9 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
                     // calculate element of weight matrix (CalWeight)
                     cv::Vec3b bin_value;
                     cv::Vec3b curr_pixel = next_frame.at<cv::Vec3b>(row_index,col_index);
-                    bin_value[0] = curr_pixel[0] / bin_width;
-                    bin_value[1] = curr_pixel[1] / bin_width;
-                    bin_value[2] = curr_pixel[2] / bin_width;
+                    bin_value[0] = curr_pixel[0] * bin_width;
+                    bin_value[1] = curr_pixel[1] * bin_width;
+                    bin_value[2] = curr_pixel[2] * bin_width;
                     float weight = sqrt(
                               plane_a[bin_value[0]]
                             * plane_b[bin_value[1]]
