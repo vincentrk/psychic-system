@@ -142,7 +142,7 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         next_rect.height = target_Region.height;
 
         int height = target_Region.height;
-        int width = target_Region.height;
+        int width = target_Region.width;
 
         float * plane_a = target_ratio.ptr<float>(0);
         float * plane_b = target_ratio.ptr<float>(1);
