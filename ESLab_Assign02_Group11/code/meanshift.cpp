@@ -4,6 +4,7 @@
 */
 
 #include"meanshift.h"
+#include <algorithm>
 
 void print_mat(cv::Mat &mat)
 {
@@ -142,7 +143,8 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         next_rect.height = target_Region.height;
 
         int height = target_Region.height;
-        int width = target_Region.width;
+        // Loop is limited to a circle with a diameter of height
+        int width = std::min(height, target_Region.width);
 
         float * plane_a = target_ratio.ptr<float>(0);
         float * plane_b = target_ratio.ptr<float>(1);
@@ -160,10 +162,6 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
             {
                 float norm_j = static_cast<float>(j-centre)/centre;
 //                mult = pow(norm_i,2)+pow(norm_j,2)>1.0?0.0:1.0;
-                if (norm_j > 1.0) {
-                    // norm_j grows lineairly with j, so it will be "too big" for the rest of the loop
-                    break;
-                }
                 if (norm_i_sqr + norm_j * norm_j <= 1.0) {
                     // calculate element of weight matrix (CalWeight)
                     cv::Vec3b bin_value;
