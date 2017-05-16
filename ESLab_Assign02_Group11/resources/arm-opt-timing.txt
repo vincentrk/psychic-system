@@ -1,6 +1,7 @@
-Total Time : 2564.94 msec
-Reading Time : 431.856 msec
-Writing Time : 1644.9 msec
-Tracking Time : 487.362 msec
-Time: 2.56494 sec
-FPS : 12.4759
+Total Time : 2538.24 msec
+Reading Time : 432.342 msec
+Writing Time : 1644.1 msec
+Tracking Time : 461.396 msec
+Processed 32 frames
+Time: 2.53824 sec
+FPS : 12.6072
