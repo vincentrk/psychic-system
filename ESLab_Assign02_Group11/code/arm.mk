@@ -28,7 +28,6 @@ CFLAGS=$(DEFS) $(INCLUDES)          \
 			-ffast-math									\
       -Wno-trigraphs                \
 			-funsafe-math-optimizations			\
-      -fno-strict-aliasing          \
       -fno-common                   \
       -fomit-frame-pointer       \
       -mapcs                        \
