@@ -145,8 +145,8 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         {
             for (int b=0; b<cfg.num_bins; b++)
             {
-                target_ratio.at<float>(k, b) = target_model.at<float>(k, b)
-                                         / target_candidate.at<float>(k, b);
+                target_ratio.at<float>(k, b) = sqrt(target_model.at<float>(k, b)
+                                         / target_candidate.at<float>(k, b));
             }
         }
 
@@ -168,7 +168,6 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         float * plane_a = target_ratio.ptr<float>(0);
         float * plane_b = target_ratio.ptr<float>(1);
         float * plane_c = target_ratio.ptr<float>(2);
-        float * sqrt_table = (float *) calloc(num_bins * num_bins * num_bins, sizeof(float));
 
         int row_index = target_Region.y;
         for(int i=0;i<height;i++)
@@ -191,16 +190,10 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
                     bin_value[0] = curr_pixel[0] >> bin_width_pow;
                     bin_value[1] = curr_pixel[1] >> bin_width_pow;
                     bin_value[2] = curr_pixel[2] >> bin_width_pow;
-                    float * table_entry = sqrt_table + (
-                    	bin_value[0] + bin_value[1] * num_bins + bin_value[2] * num_bins * num_bins);
-                    float weight = *table_entry;
-                    if (weight == 0) {
-                        weight = sqrt(
+                    float weight = (
                               plane_a[bin_value[0]]
                             * plane_b[bin_value[1]]
                             * plane_c[bin_value[2]]);
-                        *table_entry = weight;
-                    }
 
                     delta_x += static_cast<float>(norm_j * weight);
                     delta_y += static_cast<float>(norm_i * weight);
@@ -210,7 +203,6 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
             }
             row_index++;
         }
-        free(sqrt_table);
 
         next_rect.x += static_cast<int>((delta_x/sum_wij)*centre);
         next_rect.y += static_cast<int>((delta_y/sum_wij)*centre);
