@@ -107,6 +107,12 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
     int row_index = rect.y;
     for(int i=0;i<height;i++)
     {
+        float buf_a[cfg.num_bins][width];
+        float buf_b[cfg.num_bins][width];
+        float buf_c[cfg.num_bins][width];
+        memset(buf_a, 0, cfg.num_bins * width * sizeof(float) );
+        memset(buf_b, 0, cfg.num_bins * width * sizeof(float) );
+        memset(buf_c, 0, cfg.num_bins * width * sizeof(float) );
         int clo_index = rect.x;
         for(int j=0;j<width;j++)
         {
@@ -116,13 +122,23 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
             bin_value[1] = (curr_pixel_value[1] >> bin_width_pow);
             bin_value[2] = (curr_pixel_value[2] >> bin_width_pow);
             float kernel_element = kernel_ptr[abs(i - kern_h) * kernel_row_size + abs(j - kern_w)];
-            float val_a = plane_a[bin_value[0]];
-            float val_b = plane_b[bin_value[1]];
-            float val_c = plane_c[bin_value[2]];
-            plane_a[bin_value[0]] = val_a + kernel_element;
-            plane_b[bin_value[1]] = val_b + kernel_element;
-            plane_c[bin_value[2]] = val_c + kernel_element;
+            buf_a[bin_value[0]][j] = kernel_element;
+            buf_b[bin_value[1]][j] = kernel_element;
+            buf_c[bin_value[2]][j] = kernel_element;
             clo_index++;
+        }
+        for (int b=0; b<cfg.num_bins; b++) {
+            float sum_a = 0;
+            float sum_b = 0;
+            float sum_c = 0;
+            for (int j=0; j<width; j++) {
+                sum_a += buf_a[b][j];
+                sum_b += buf_b[b][j];
+                sum_c += buf_c[b][j];
+            }
+            plane_a[b] += sum_a;
+            plane_b[b] += sum_b;
+            plane_c[b] += sum_c;
         }
         row_index++;
     }
