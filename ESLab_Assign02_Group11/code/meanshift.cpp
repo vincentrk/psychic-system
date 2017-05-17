@@ -116,9 +116,12 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
             bin_value[1] = (curr_pixel_value[1] >> bin_width_pow);
             bin_value[2] = (curr_pixel_value[2] >> bin_width_pow);
             float kernel_element = kernel_ptr[abs(i - kern_h) * kernel_row_size + abs(j - kern_w)];
-            plane_a[bin_value[0]] += kernel_element;
-            plane_b[bin_value[1]] += kernel_element;
-            plane_c[bin_value[2]] += kernel_element;
+            float val_a = plane_a[bin_value[0]];
+            float val_b = plane_b[bin_value[1]];
+            float val_c = plane_c[bin_value[2]];
+            plane_a[bin_value[0]] = val_a + kernel_element;
+            plane_b[bin_value[1]] = val_b + kernel_element;
+            plane_c[bin_value[2]] = val_c + kernel_element;
             clo_index++;
         }
         row_index++;
