@@ -97,6 +97,13 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
     float * plane_b = pdf_model.ptr<float>(1);
     float * plane_c = pdf_model.ptr<float>(2);
 
+    if (!kernel.isContinuous()) {
+        std::cerr << "Error: kernel is not continuous\n";
+        return pdf_model;
+    }
+    float * kernel_ptr = kernel.ptr<float>(0);
+    int kernel_row_size = kernel.cols;
+
     int row_index = rect.y;
     for(int i=0;i<height;i++)
     {
@@ -108,7 +115,7 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
             bin_value[0] = (curr_pixel_value[0] >> bin_width_pow);
             bin_value[1] = (curr_pixel_value[1] >> bin_width_pow);
             bin_value[2] = (curr_pixel_value[2] >> bin_width_pow);
-            float kernel_element = kernel.at<float>(abs(i - kern_h), abs(j - kern_w));
+            float kernel_element = kernel_ptr[abs(i - kern_h) * kernel_row_size + abs(j - kern_w)];
             plane_a[bin_value[0]] += kernel_element;
             plane_b[bin_value[1]] += kernel_element;
             plane_c[bin_value[2]] += kernel_element;
