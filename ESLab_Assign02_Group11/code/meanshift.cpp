@@ -138,6 +138,11 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
     cv::Mat target_ratio(3, cfg.num_bins, CV_32F);
     cv::Rect next_rect;
 
+    if (!next_frame.isContinuous()) {
+        std::cerr << "Error: frame is not continuous\n";
+        return next_rect;
+    }
+
     for(int iter=0;iter<cfg.MaxIter;iter++)
     {
         cv::Mat target_candidate = pdf_representation(next_frame,target_Region);
@@ -176,7 +181,7 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
             float norm_i_sqr = norm_i*norm_i;
             // since (0 <= i < weight.rows)
             // it follows (-1 <= norm_i <= 1)
-            int col_index = target_Region.x;
+            const cv::Vec3b * pixels = next_frame.ptr<cv::Vec3b>(row_index) + target_Region.x;
             for(int j=0;j<width;j++)
             {
                 float norm_j = static_cast<float>(j-centre)/centre;
@@ -186,7 +191,7 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
                     cv::Vec3b bin_value;
                     // uint8x16_t bin_value, curr_pixel;
                     // vld1q_u8(next_frame.ptr);
-                    cv::Vec3b curr_pixel = next_frame.at<cv::Vec3b>(row_index,col_index);
+                    cv::Vec3b curr_pixel = pixels[j];
                     bin_value[0] = curr_pixel[0] >> bin_width_pow;
                     bin_value[1] = curr_pixel[1] >> bin_width_pow;
                     bin_value[2] = curr_pixel[2] >> bin_width_pow;
@@ -199,7 +204,6 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
                     delta_y += static_cast<float>(norm_i * weight);
                     sum_wij += static_cast<float>(weight);
                 }
-                col_index++;
             }
             row_index++;
         }
