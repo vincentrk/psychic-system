@@ -39,7 +39,7 @@ void  MeanShift::Init_target_frame(const cv::Mat &frame,const cv::Rect &rect)
     target_Region = rect;
     float kernel_sum = Epanechnikov_kernel(kernel, rect.height, rect.width);
     kernel /= kernel_sum; // pre-scale kernel
-    target_model = pdf_representation(frame,target_Region);
+    target_model = pdf_representation(frame,target_Region,0.0001);
 }
 
 float & MeanShift::kernel_elem(int row, int col, int height, int width) {
@@ -84,9 +84,10 @@ float  MeanShift::Epanechnikov_kernel(cv::Mat &kernel, int h, int w)
     return kernel_sum;
 }
 
-cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect)
+cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect, const float init)
 {
-    cv::Mat pdf_model(3,cfg.num_bins,CV_32F,cv::Scalar(1e-10));
+    std::cerr << "entering pdf_representation()\n";
+    cv::Mat pdf_model(3,cfg.num_bins,CV_32F,cv::Scalar(init));
 
     int height = rect.height;
     int width = rect.width;
@@ -127,7 +128,7 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
         }
         row_index++;
     }
-
+    std::cerr << "leaving pdf_representation()\n";
     return pdf_model;
 }
 
@@ -135,7 +136,8 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
 {
     int num_bins = cfg.num_bins;
 
-    cv::Mat target_ratio(3, num_bins, CV_32F);
+    cv::Mat target_ratio_f(3, num_bins, CV_32F);
+    cv::Mat target_ratio(3, num_bins, CV_32S);
     cv::Rect next_rect;
 
     if (!next_frame.isContinuous()) {
@@ -145,65 +147,92 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
 
     for(int iter=0;iter<cfg.MaxIter;iter++)
     {
-        cv::Mat target_candidate = pdf_representation(next_frame,target_Region);
+        cv::Mat target_candidate = pdf_representation(next_frame,target_Region, 0);
+        float max_ratio = 0.0f;
+        std::cerr << "calculating ratio\n";
         for (int k=0; k<3; k++)
         {
             for (int b=0; b<num_bins; b++)
             {
-                target_ratio.at<float>(k, b) = sqrt(target_model.at<float>(k, b)
-                                         / target_candidate.at<float>(k, b));
+                if (target_candidate.at<float>(k, b) == 0.0f) {
+                    target_ratio_f.at<float>(k, b) = sqrt(target_model.at<float>(k, b));
+                } else {
+                    target_ratio_f.at<float>(k, b) = sqrt(target_model.at<float>(k, b)
+                                             / target_candidate.at<float>(k, b));
+                    max_ratio = std::max(max_ratio, target_ratio_f.at<float>(k, b));
+                }
             }
         }
-
-        float delta_x = 0.0;
-        float sum_wij = 0.0;
-        float delta_y = 0.0;
-        float centre = static_cast<float>((target_Region.height-1)/2.0);
-
-        next_rect.x = target_Region.x;
-        next_rect.y = target_Region.y;
-        next_rect.width = target_Region.width;
-        next_rect.height = target_Region.height;
+        std::cerr << "scaling...\n";
 
         int height = target_Region.height;
         // Loop is limited to a circle with a diameter of height
         int width = std::min(height, target_Region.width);
 
-        float * plane_a = target_ratio.ptr<float>(0);
-        float * plane_b = target_ratio.ptr<float>(1);
-        float * plane_c = target_ratio.ptr<float>(2);
+        float limit = pow(pow(2.0, 32.0) / (height * height * height), 1.0f/3.0f);
+        float scale = std::max(limit / max_ratio, 0.0f);
+        std::cerr << "scale: " << scale << " limit: " << limit << "\n";
+        for (int k=0; k<3; k++)
+        {
+            for (int b=0; b<num_bins; b++)
+            {
+                std::cerr << "ratio: " << target_ratio_f.at<float>(k, b) << "\n";
+                target_ratio.at<int>(k, b) = std::min(target_ratio_f.at<float>(k, b) * scale, limit);
+            }
+        }
+        std::cerr << "converted\n";
+
+        int delta_x = 0;
+        int sum_wij = 0;
+        int delta_y = 0;
+        int centre = ((height-1)/2); // Half pixel error
+
+        int * plane_a = target_ratio.ptr<int>(0);
+        int * plane_b = target_ratio.ptr<int>(1);
+        int * plane_c = target_ratio.ptr<int>(2);
 
         int row_index = target_Region.y;
         for(int i=0;i<height;i++)
         {
-            float norm_i = static_cast<float>(i-centre)/centre;
-            float norm_i_sqr = norm_i*norm_i;
+            int norm_i = (i-centre);
+            int norm_i_sqr = norm_i*norm_i;
             const cv::Vec3b * pixels = next_frame.ptr<cv::Vec3b>(row_index) + target_Region.x;
             for(int j=0;j<width;j++)
             {
-                float norm_j = static_cast<float>(j-centre)/centre;
-                if (norm_i_sqr + norm_j * norm_j <= 1.0) {
+//                std::cerr << "loop\n";
+                int norm_j = (j-centre);
+                if (norm_i_sqr + norm_j * norm_j <= centre * centre) {
                     // calculate element of weight matrix (CalWeight)
                     cv::Vec3b bin_value;
                     cv::Vec3b curr_pixel = pixels[j];
                     bin_value[0] = curr_pixel[0] >> bin_width_pow;
                     bin_value[1] = curr_pixel[1] >> bin_width_pow;
                     bin_value[2] = curr_pixel[2] >> bin_width_pow;
-                    float weight = (
+                    int weight = (
                               plane_a[bin_value[0]]
                             * plane_b[bin_value[1]]
                             * plane_c[bin_value[2]]);
-
-                    delta_x += static_cast<float>(norm_j * weight);
-                    delta_y += static_cast<float>(norm_i * weight);
-                    sum_wij += static_cast<float>(weight);
+                    std::cerr << "weight: " << weight << "\n";
+                    if (weight == 0) {
+                        std::cerr << "ZERO: " << i << "," << j << " bin: " << ((int)bin_value[0]) << " " << ((int)bin_value[1]) << " " << ((int)bin_value[2]) << "\n";
+                    }
+                    delta_x += (norm_j * weight);
+                    delta_y += (norm_i * weight);
+                    sum_wij += (weight);
                 }
             }
             row_index++;
         }
+        std::cerr << "sums: " << delta_x << " " << delta_y << " " << sum_wij << "\n";
+        std::cerr << "done\n";
 
-        next_rect.x += static_cast<int>((delta_x/sum_wij)*centre);
-        next_rect.y += static_cast<int>((delta_y/sum_wij)*centre);
+        next_rect.x = target_Region.x;
+        next_rect.y = target_Region.y;
+        next_rect.width = target_Region.width;
+        next_rect.height = target_Region.height;
+
+        next_rect.x += ((delta_x/sum_wij));
+        next_rect.y += ((delta_y/sum_wij));
 
         if(abs(next_rect.x-target_Region.x)<1 && abs(next_rect.y-target_Region.y)<1)
         {
