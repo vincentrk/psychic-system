@@ -251,8 +251,10 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         next_rect.width = target_Region.width;
         next_rect.height = target_Region.height;
 
-        next_rect.x += ((delta_x/sum_wij));
-        next_rect.y += ((delta_y/sum_wij));
+        if (sum_wij != 0) {
+            next_rect.x += ((delta_x/sum_wij));
+            next_rect.y += ((delta_y/sum_wij));
+        }
 
         if(abs(next_rect.x-target_Region.x)<1 && abs(next_rect.y-target_Region.y)<1)
         {
