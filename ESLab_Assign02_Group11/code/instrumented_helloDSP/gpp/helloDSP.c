@@ -362,7 +362,7 @@ extern "C"
 	printTimer(&dspInit);
 	for(ind = 0; ind < numIterations ; ++ind)
 	{
-		SYSTEM_1Print("Message Passing Time:%ld\n ",messagePassing[ind]);
+		printf("%g\n ",messagePassing[ind]);
 	}
         SYSTEM_0Print("Leaving helloDSP_Execute ()\n");
 
