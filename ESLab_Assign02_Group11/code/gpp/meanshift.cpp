@@ -140,8 +140,8 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
     frame.cols,
     bin_width_pow);
 
-//    return pdf_model;
-
+    return pdf_model;
+/*
     int row_index = rect.y;
     for(int i=0;i<height;i++)
     {
@@ -166,7 +166,7 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
     }
 //    std::cerr << "leaving pdf_representation()\n";
     return pdf_model;
-
+*/
 }
 
 cv::Rect MeanShift::track(const cv::Mat &next_frame)
