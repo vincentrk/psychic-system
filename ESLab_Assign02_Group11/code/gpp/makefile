@@ -9,7 +9,7 @@ DSPLINK := /opt/bbToolChain/usr/local/share/bbframework/platform/beagle-linux/to
 #   ----------------------------------------------------------------------------
 #   General options, sources and libraries
 #   ----------------------------------------------------------------------------
-CXXSRCS := main.cpp meanshift.cpp pool_notify.cpp 
+CXXSRCS := main.cpp meanshift.cpp meanshift_portable.cpp pool_notify.cpp 
 OBJS :=
 DEBUG :=
 LDFLAGS := -lpthread -lm --sysroot=/opt/rootfs

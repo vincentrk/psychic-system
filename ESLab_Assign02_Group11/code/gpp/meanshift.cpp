@@ -4,6 +4,7 @@
 */
 
 #include"meanshift.h"
+#include "meanshift_portable.h"
 #include <limits>
 #include <algorithm>
 
@@ -119,8 +120,27 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
         std::cerr << "Error: kernel is not continuous\n";
         return pdf_model;
     }
-    int * kernel_ptr = kernel.ptr<int>(0);
+    if (!frame.isContinuous()) {
+        std::cerr << "Error: frame is not continuous\n";
+        return pdf_model;
+    }
+
+    const int * kernel_ptr = kernel.ptr<int>(0);
     int kernel_row_size = kernel.cols;
+
+    pdf_representation_inner(
+    height,
+    width,
+    plane_a,
+    plane_b,
+    plane_c,
+    kernel_ptr,
+    kernel_row_size,
+    (unsigned char *) (frame.ptr<cv::Vec3b>(rect.y) + rect.x),
+    frame.cols,
+    bin_width_pow);
+
+//    return pdf_model;
 
     int row_index = rect.y;
     for(int i=0;i<height;i++)
@@ -146,6 +166,7 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
     }
 //    std::cerr << "leaving pdf_representation()\n";
     return pdf_model;
+
 }
 
 cv::Rect MeanShift::track(const cv::Mat &next_frame)
@@ -209,7 +230,7 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         int * plane_c = target_ratio.ptr<int>(2);
 
         // Set up data for DSP
-        unsigned int buf_size = pool_notify_GetSize();
+/*        unsigned int buf_size = pool_notify_GetSize();
         int   * bufi = pool_notify_GetBuf();
         float * buff = (float *) bufi;
 
@@ -248,8 +269,8 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         }
 
         pool_notify_Execute();
-
-        row_index = target_Region.y;
+*/
+        int row_index = target_Region.y;
         for(int i=0;i<height;i++)
         {
             int norm_i = (i-centre);
@@ -292,7 +313,7 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         next_rect.width = target_Region.width;
         next_rect.height = target_Region.height;
 
-        pool_notify_Result();
+//        pool_notify_Result();
 
         //next_rect.x += static_cast<int>((delta_x/sum_wij)*centre);
         //next_rect.y += static_cast<int>((delta_y/sum_wij)*centre);
