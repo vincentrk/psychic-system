@@ -5,6 +5,7 @@
 #include "opencv2/core/core.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
+#include "pool_notify.h"
 
 #define PI 3.1415926
 class MeanShift

@@ -24,7 +24,7 @@ MeanShift::MeanShift()
     cfg.num_bins = 16;
     cfg.piexl_range = 256;
     bin_width = cfg.piexl_range / cfg.num_bins;
-    bin_width= 1/ bin_width;
+    bin_width = 1/ bin_width;
 }
 
 void  MeanShift::Init_target_frame(const cv::Mat &frame,const cv::Rect &rect)
@@ -150,7 +150,48 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         float * plane_b = target_ratio.ptr<float>(1);
         float * plane_c = target_ratio.ptr<float>(2);
 
+        // Set up data for DSP
+        unsigned int buf_size = pool_notify_GetSize();
+        int   * bufi = pool_notify_GetBuf();
+        float * buff = (float *) bufi;
+
+        unsigned int need =
+                   sizeof(int)  * 3
+                 + sizeof(float)* 1
+                 + sizeof(float)* 3 * cfg.num_bins
+                 + sizeof(char) * 4 * height * width;
+        if (buf_size < need) {
+            std::cout << "Error: buffer size too small, need " << need << "\n";
+            return next_rect;
+        }
+
+        // input: dimensions, bins, bin_width, target_ratio, frame-cutout
+        // assume float, int are 32 bits
+        int n = 0;
+        bufi[n++] = height;
+        bufi[n++] = width;
+        bufi[n++] = cfg.num_bins;
+        buff[n++] = bin_width;
+        for (int k=0; k<3; k++) {
+            for (int b=0; b<cfg.num_bins; b++) {
+                buff[n++] = target_ratio.at<float>(k, b);
+            }
+        }
+        unsigned char * buf_frame = (unsigned char *) &bufi[n];
         int row_index = target_Region.y;
+        for (int i=0; i<height; i++) {
+            int col_index = target_Region.x;
+            for (int j=0; j<width; j++) {
+                cv::Vec3b curr_pixel = next_frame.at<cv::Vec3b>(row_index, col_index);
+                buf_frame[n++] = curr_pixel[0];
+                buf_frame[n++] = curr_pixel[1];
+                buf_frame[n++] = curr_pixel[2];
+            }
+        }
+
+        pool_notify_Execute();
+
+        row_index = target_Region.y;
         for(int i=0;i<height;i++)
         {
             float norm_i = static_cast<float>(i-centre)/centre;
@@ -165,8 +206,6 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
                 if (norm_i_sqr + norm_j * norm_j <= 1.0) {
                     // calculate element of weight matrix (CalWeight)
                     cv::Vec3b bin_value;
-                    // uint8x16_t bin_value, curr_pixel;
-                    // vld1q_u8(next_frame.ptr);
                     cv::Vec3b curr_pixel = next_frame.at<cv::Vec3b>(row_index,col_index);
                     bin_value[0] = curr_pixel[0] * bin_width;
                     bin_value[1] = curr_pixel[1] * bin_width;
@@ -185,8 +224,12 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
             row_index++;
         }
 
-        next_rect.x += static_cast<int>((delta_x/sum_wij)*centre);
-        next_rect.y += static_cast<int>((delta_y/sum_wij)*centre);
+        pool_notify_Result();
+
+        //next_rect.x += static_cast<int>((delta_x/sum_wij)*centre);
+        //next_rect.y += static_cast<int>((delta_y/sum_wij)*centre);
+        next_rect.x += static_cast<int>(buff[1]);
+        next_rect.y += static_cast<int>(buff[2]);
 
         if(abs(next_rect.x-target_Region.x)<1 && abs(next_rect.y-target_Region.y)<1)
         {
