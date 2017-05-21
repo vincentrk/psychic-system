@@ -28,7 +28,7 @@ DEBUG :=
 # CFLAGS := -I$(BASE_BSL)/dsp/include -DP__ROFILE -s -mw
 CFLAGS := -I$(BASE_BSL)/dsp/include -DP__ROFILE -mw
 LDFLAGS := -i$(BASE_BSL)/dsp/lib
-CSRCS := task.c pool_notify_config.c dsp_main.c
+CSRCS := task.c meanshift_portable.c pool_notify_config.c dsp_main.c
 ASRCS :=
 BIOSTCF := pool_notify.tcf
 OBJS :=
@@ -130,7 +130,8 @@ DEFS := 	-DHOSTED_IO 				\
 		-DPROCID=0                              \
 		-dPHYINTERFACE=SHMEM_INTERFACE          \
 		-DDSP_SWI_MODE                          \
-		-DARCH_OMAP                             
+		-DARCH_OMAP                             \
+		-DDSP_COMPILER
 
 
 
