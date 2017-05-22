@@ -52,10 +52,7 @@ void  MeanShift::Init_target_frame(const cv::Mat &frame,const cv::Rect &rect)
     target_Region = rect;
     float kernel_sum = Epanechnikov_kernel(kernel, rect.height, rect.width);
     kernel *= INT_MAX / kernel_sum; // pre-scale kernel
-//    print_mat(kernel);
     kernel.convertTo(kernel, CV_32S);
-//    std::cerr << INT_MAX << " max\n";
-//    print_mat_int(kernel);
     target_model = pdf_representation(frame,target_Region,0);
 }
 
@@ -83,7 +80,6 @@ float  MeanShift::Epanechnikov_kernel(cv::Mat &kernel, int h, int w)
     // Halve the size, round up, add one for the zero row
     // (x+1+1)/2 == x/2+1
     kernel.create(h/2+1, w/2+1, CV_32F);
-//    std::cout << "kernel size: " << h << ";" << w << "\n";
 
     float kernel_sum = 0.0;
     for(int i=0;i<h;i++)
@@ -155,78 +151,4 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
     target_Region.y = rect_y + offset_y;
     target_Region.x = rect_x + offset_x;
     return target_Region;
-/*
-    std::cerr << "=== ARM ===\n";
-
-    int num_bins = cfg.num_bins;
-
-    cv::Mat target_ratio_f(3, num_bins, CV_32F);
-    cv::Mat target_ratio(3, num_bins, CV_32S);
-
-    if (!next_frame.isContinuous()) {
-        std::cerr << "Error: frame is not continuous\n";
-        return target_Region;
-    }
-
-    for(int iter=0;iter<cfg.MaxIter;iter++)
-    {
-        cv::Mat target_candidate = pdf_representation(next_frame,target_Region, 0);
-        float max_ratio[3] = {0.0f};
-        for (int k=0; k<3; k++)
-        {
-            for (int b=0; b<num_bins; b++)
-            {
-                if (target_candidate.at<int>(k, b) == 0) {
-                    target_ratio_f.at<float>(k, b) = 0;
-                } else {
-                    target_ratio_f.at<float>(k, b) = sqrt(target_model.at<int>(k, b)
-                                             / target_candidate.at<int>(k, b));
-                    max_ratio[k] = std::max(max_ratio[k], target_ratio_f.at<float>(k, b));
-                }
-            }
-        }
-
-        int height = target_Region.height;
-        // Loop is limited to a circle with a diameter of height
-        int width = std::min(height, target_Region.width);
-
-        float limit = pow((INT_MAX * 2.0f * 4.0f) / (height * height * height * max_ratio[0] * max_ratio[1] * max_ratio[2]), 1.0f / 3.0f);
-        float scale = std::max(limit, 0.0f);
-        for (int k=0; k<3; k++)
-        {
-            for (int b=0; b<num_bins; b++)
-            {
-                target_ratio.at<int>(k, b) = (target_ratio_f.at<float>(k, b) * scale) + 0.5;
-                std::cerr << "target_ratio_ARM: " << target_ratio.at<int>(k, b) << "\n";
-            }
-        }
-
-        int delta_x = 0;
-        int delta_y = 0;
-
-        track_iter_inner(
-            height,
-            width,
-            target_ratio.ptr<int>(0),
-            target_ratio.ptr<int>(1),
-            target_ratio.ptr<int>(2),
-            (unsigned char *) (next_frame.ptr<cv::Vec3b>(target_Region.y) + target_Region.x),
-            next_frame.cols,
-            bin_width_pow,
-            &delta_y,
-            &delta_x
-        );
-
-        target_Region.y += delta_y;
-        target_Region.x += delta_x;
-
-        std::cerr << "newrect_ARM: (" << target_Region.y << "," << target_Region.x << ")\n";
-        std::cerr << "delta_ARM: (" << delta_y << "," << delta_x << ")\n";
-
-        if((delta_y | delta_x) == 0) {
-            break;
-        }
-    }
-
-    return target_Region;*/
 }
