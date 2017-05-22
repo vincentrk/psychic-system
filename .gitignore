@@ -1,4 +1,11 @@
 *.DS_Store
+tracking_result.avi
+
+# Executables
+*.exe
+*.gpp
+*.dsp
+
 # Object files
 *.o
 *.ko
@@ -28,6 +35,8 @@
 *.i*86
 *.x86_64
 *.hex
+*.gpp
+*.dsp
 
 # Debug files
 *.dSYM/
