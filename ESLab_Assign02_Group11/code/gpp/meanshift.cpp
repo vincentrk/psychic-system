@@ -54,6 +54,7 @@ void  MeanShift::Init_target_frame(const cv::Mat &frame,const cv::Rect &rect)
     kernel *= INT_MAX / kernel_sum; // pre-scale kernel
     kernel.convertTo(kernel, CV_32S);
     target_model = pdf_representation(frame,target_Region,0);
+    frame_cut = (unsigned char *) malloc(rect.height * rect.width * 9 * 3);
 }
 
 float & MeanShift::kernel_elem(int row, int col, int height, int width) {
@@ -127,8 +128,15 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
 
 cv::Rect MeanShift::track(const cv::Mat &next_frame)
 {
-    int offset_y = 0; //std::max(0, target_Region.y - target_Region.height));
-    int offset_x = 0; //std::max(0, target_Region.x - target_Region.width));
+    int offset_y = std::max(0, target_Region.y - target_Region.height);
+    int offset_x = std::max(0, target_Region.x - target_Region.width);
+    int size_y = std::min(next_frame.rows - offset_y, target_Region.height * 3);
+    int size_x = std::min(next_frame.cols - offset_x, target_Region.width * 3);
+
+    int n = 0;
+    for (int y=0; y<size_y; y++) {
+        memcpy(frame_cut + size_x * y * 3, next_frame.ptr<cv::Vec3b>(offset_y + y) + offset_x, size_x * 3);
+    }
 
     int rect_y = target_Region.y - offset_y;
     int rect_x = target_Region.x - offset_x;
@@ -136,8 +144,8 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
     track_inner(
         target_Region.height,
         target_Region.width,
-        (unsigned char *) next_frame.ptr<cv::Vec3b>(0),
-        next_frame.cols,
+        frame_cut,
+        size_x,
         kernel.ptr<int>(0),
         kernel.cols,
         target_model.ptr<int>(0),

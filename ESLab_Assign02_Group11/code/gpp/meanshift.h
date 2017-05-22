@@ -16,6 +16,7 @@ class MeanShift
     cv::Mat target_model;
     cv::Rect target_Region;
     cv::Mat kernel;
+    unsigned char * frame_cut;
 
     struct config{
         int num_bins;
