@@ -131,6 +131,33 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
 
 cv::Rect MeanShift::track(const cv::Mat &next_frame)
 {
+    int offset_y = 0; //std::max(0, target_Region.y - target_Region.height));
+    int offset_x = 0; //std::max(0, target_Region.x - target_Region.width));
+
+    int rect_y = target_Region.y - offset_y;
+    int rect_x = target_Region.x - offset_x;
+
+    track_inner(
+        target_Region.height,
+        target_Region.width,
+        (unsigned char *) next_frame.ptr<cv::Vec3b>(0),
+        next_frame.cols,
+        kernel.ptr<int>(0),
+        kernel.cols,
+        target_model.ptr<int>(0),
+        bin_width_pow,
+        cfg.num_bins,
+        cfg.MaxIter,
+        &rect_y,
+        &rect_x
+    );
+
+    target_Region.y = rect_y + offset_y;
+    target_Region.x = rect_x + offset_x;
+    return target_Region;
+/*
+    std::cerr << "=== ARM ===\n";
+
     int num_bins = cfg.num_bins;
 
     cv::Mat target_ratio_f(3, num_bins, CV_32F);
@@ -170,6 +197,7 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
             for (int b=0; b<num_bins; b++)
             {
                 target_ratio.at<int>(k, b) = (target_ratio_f.at<float>(k, b) * scale) + 0.5;
+                std::cerr << "target_ratio_ARM: " << target_ratio.at<int>(k, b) << "\n";
             }
         }
 
@@ -192,10 +220,13 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         target_Region.y += delta_y;
         target_Region.x += delta_x;
 
+        std::cerr << "newrect_ARM: (" << target_Region.y << "," << target_Region.x << ")\n";
+        std::cerr << "delta_ARM: (" << delta_y << "," << delta_x << ")\n";
+
         if((delta_y | delta_x) == 0) {
             break;
         }
     }
 
-    return target_Region;
+    return target_Region;*/
 }

@@ -1,4 +1,3 @@
-
 void pdf_representation_inner(
     int height,
     int width,
@@ -23,7 +22,7 @@ void pdf_representation_inner(
 
 void track_iter_inner(
     const int height,
-    const int width,
+    int width,
 #ifdef DSP_COMPILER
     const int * restrict ratio_a,
     const int * restrict ratio_b,
@@ -39,5 +38,28 @@ void track_iter_inner(
     const int bin_width_pow,
     int * result_y,
     int * result_x
+);
+
+void track_inner(
+    const int height,
+    const int width,
+#ifdef DSP_COMPILER
+    const unsigned char * restrict pixels,
+    const int pixel_stride,
+    const int * restrict kernel,
+    const int kernel_row_size,
+    const int * restrict target_model,
+#else
+    const unsigned char * __restrict__ pixels,
+    const int pixel_stride,
+    const int * __restrict__ kernel,
+    const int kernel_row_size,
+    const int * __restrict__ target_model,
+#endif
+    const int bin_width_pow,
+    const int bins_num,
+    const int iter_max,
+    int * rect_y,
+    int * rect_x
 );
 
