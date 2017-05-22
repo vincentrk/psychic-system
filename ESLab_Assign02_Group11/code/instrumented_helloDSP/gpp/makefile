@@ -163,7 +163,7 @@ $(OBJDIR_R)/%.o : %.c
 	@$(BASE_TOOLCHAIN)/bin/$(CC) $(DEFS) $(ALL_CFLAGS) -o$@ $<
 
 send:
-	scp $(BINDIR_R)/$(BIN) root@192.168.0.202:/home/root/esLAB/helloDSP/.
+	scp $(BINDIR_R)/$(BIN) beagle.wijtemans.nl:/home/root/esLAB/test_phil/.
 
 .PHONY: clean
 clean:
