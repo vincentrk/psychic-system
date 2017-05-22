@@ -1,21 +1,27 @@
+#define MEANSHIFT_MSG_INIT 1
+#define MEANSHIFT_MSG_TRACK 2
+#define MEANSHIFT_MSG_STOP 4
+#define MEANSHIFT_MSG_SUCCESS 16
+#define MEANSHIFT_MSG_FAILURE 32
+#define MEANSHIFT_E_NOMEM 128
+
+#define CHANNEL_COUNT 3
+
+#ifdef DSP_COMPILER
+    #define RESTRICT restrict
+#else
+    #define RESTRICT __restrict
+#endif
+
 void pdf_representation_inner(
     int height,
     int width,
-#ifdef DSP_COMPILER
-    int * restrict pdf_a,
-    int * restrict pdf_b,
-    int * restrict pdf_c,
-    const unsigned char * restrict pixels,
+    int * RESTRICT pdf_a,
+    int * RESTRICT pdf_b,
+    int * RESTRICT pdf_c,
+    const unsigned char * RESTRICT pixels,
     int pixel_stride,
-    const int * restrict kernel,
-#else
-    int * __restrict__ pdf_a,
-    int * __restrict__ pdf_b,
-    int * __restrict__ pdf_c,
-    const unsigned char * __restrict__ pixels,
-    int pixel_stride,
-    const int * __restrict__ kernel,
-#endif
+    const int * RESTRICT kernel,
     int kernel_row_size,
     int bin_width_pow
 );
@@ -23,17 +29,10 @@ void pdf_representation_inner(
 void track_iter_inner(
     const int height,
     int width,
-#ifdef DSP_COMPILER
-    const int * restrict ratio_a,
-    const int * restrict ratio_b,
-    const int * restrict ratio_c,
-    const unsigned char * restrict pixels,
-#else
-    const int * __restrict__ ratio_a,
-    const int * __restrict__ ratio_b,
-    const int * __restrict__ ratio_c,
-    const unsigned char * __restrict__ pixels,
-#endif
+    const int * RESTRICT ratio_a,
+    const int * RESTRICT ratio_b,
+    const int * RESTRICT ratio_c,
+    const unsigned char * RESTRICT pixels,
     const int pixel_stride,
     const int bin_width_pow,
     int * result_y,
@@ -43,19 +42,11 @@ void track_iter_inner(
 void track_inner(
     const int height,
     const int width,
-#ifdef DSP_COMPILER
-    const unsigned char * restrict pixels,
+    const unsigned char * RESTRICT pixels,
     const int pixel_stride,
-    const int * restrict kernel,
+    const int * RESTRICT kernel,
     const int kernel_row_size,
-    const int * restrict target_model,
-#else
-    const unsigned char * __restrict__ pixels,
-    const int pixel_stride,
-    const int * __restrict__ kernel,
-    const int kernel_row_size,
-    const int * __restrict__ target_model,
-#endif
+    const int * RESTRICT target_model,
     const int bin_width_pow,
     const int bins_num,
     const int iter_max,

@@ -19,6 +19,8 @@
 
 #include <math.h>
 
+#include "meanshift_portable.h"
+
 extern Uint16 MPCSXFER_BufferSize ;
 
 
@@ -100,15 +102,22 @@ Int Task_create (Task_TransferInfo ** infoPtr)
 unsigned char* buf;
 int length;
 
+struct {
+	int height;
+	int width;
+	int * kernel;
+	int kernel_cols;
+	int * target_model;
+	int bin_width_pow;
+	int bins_num;
+	int iter_max;
+} meanshift_info;
+
 Int Task_execute (Task_TransferInfo * info)
 {
-	int   * bufi;
-	float * buff;
-	unsigned char * frame;
-	float result_y;
-	float result_x;
-
-	while (TRUE) {
+	int msg_type;
+	int running = 1;
+	while (running) {
 		//wait for semaphore
 		SEM_pend (&(info->notifySemObj), SYS_FOREVER);
 
@@ -116,19 +125,66 @@ Int Task_execute (Task_TransferInfo * info)
 		BCACHE_inv ((Ptr)buf, length, TRUE) ;
 
 		//call the functionality to be performed by dsp
-		bufi = (int   *) buf;
-		buff = (float *) buf;
-		frame = (unsigned char *) ( (&bufi[4]) + bufi[2]*3 );
-		track_iter(
-			bufi[0], bufi[1],
-			bufi[2], buff[3],
-			&buff[4], frame,
-			&result_y, &result_x);
-		buff[0] = result_y;
-		buff[1] = result_x;
+		
+		msg_type = ((int *) buf)[0];
+
+		if (msg_type == MEANSHIFT_MSG_TRACK) {
+			track_inner(
+				meanshift_info.height,
+				meanshift_info.width,
+				((unsigned char *) buf) + 4 * sizeof(int),
+				((int *) buf)[3],
+				meanshift_info.kernel,
+				meanshift_info.kernel_cols,
+				meanshift_info.target_model,
+				meanshift_info.bin_width_pow,
+				meanshift_info.bins_num,
+				meanshift_info.iter_max,
+				&(((int *)buf)[1]),
+				&(((int *)buf)[2])
+			);
+			((int *) buf)[0] = MEANSHIFT_MSG_SUCCESS;
+
+		} else if (msg_type == MEANSHIFT_MSG_INIT) {
+			meanshift_info.height        = ((int *) buf)[1];
+			meanshift_info.width         = ((int *) buf)[2];
+			meanshift_info.kernel_cols   = ((int *) buf)[3];
+			meanshift_info.bin_width_pow = ((int *) buf)[4];
+			meanshift_info.bins_num      = ((int *) buf)[5];
+			meanshift_info.iter_max      = ((int *) buf)[6];
+
+			meanshift_info.kernel = MEM_calloc (DSPLINK_SEGID,
+				meanshift_info.height * meanshift_info.width * sizeof(int),
+				128);
+
+			meanshift_info.target_model = MEM_calloc (DSPLINK_SEGID,
+				meanshift_info.bins_num * CHANNEL_COUNT * sizeof(int),
+				128);
+				
+            if (meanshift_info.kernel != NULL && meanshift_info.target_model != NULL) {
+			    memcpy(
+				    meanshift_info.kernel,
+				    ((int *) buf) + 7 + meanshift_info.bins_num * CHANNEL_COUNT,
+				    meanshift_info.height * meanshift_info.width * sizeof(int));
+
+			    memcpy(
+				    meanshift_info.target_model,
+				    ((int *) buf) + 7,
+				    meanshift_info.bins_num * sizeof(int));
+
+			    ((int *) buf)[0] = MEANSHIFT_MSG_SUCCESS;
+		    } else {
+		        ((int *) buf)[0] = MEANSHIFT_MSG_FAILURE;
+		        ((int *) buf)[1] = MEANSHIFT_E_NOMEM;
+	        }
+
+		} else if (msg_type == MEANSHIFT_MSG_STOP) {
+            running = 0;
+            ((int *) buf)[0] = MEANSHIFT_MSG_SUCCESS;
+		}
 
 		//write back to main memory
-		BCACHE_wb ((Ptr)buf, 128, TRUE) ;
+		BCACHE_wb ((Ptr)buf, 128, TRUE);
 
 		//notify that we are done
 		NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)0);

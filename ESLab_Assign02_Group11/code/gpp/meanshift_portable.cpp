@@ -15,27 +15,18 @@
 void pdf_representation_inner(
     int height,
     int width,
-#ifdef DSP_COMPILER
-    int * restrict pdf_a,
-    int * restrict pdf_b,
-    int * restrict pdf_c,
-    const unsigned char * restrict pixels,
+    int * RESTRICT pdf_a,
+    int * RESTRICT pdf_b,
+    int * RESTRICT pdf_c,
+    const unsigned char * RESTRICT pixels,
     int pixel_stride,
-    const int * restrict kernel,
-#else
-    int * __restrict__ pdf_a,
-    int * __restrict__ pdf_b,
-    int * __restrict__ pdf_c,
-    const unsigned char * __restrict__ pixels,
-    int pixel_stride,
-    const int * __restrict__ kernel,
-#endif
+    const int * RESTRICT kernel,
     int kernel_row_size,
     int bin_width_pow
 )
 {
     int i, j;
-    int pixel_skip = (pixel_stride - width) * 3;
+    int pixel_skip = (pixel_stride - width) * CHANNEL_COUNT;
     int kern_h = height / 2;
     int kern_w = width / 2;
 
@@ -62,17 +53,10 @@ void pdf_representation_inner(
 void track_iter_inner(
     const int height,
     int width,
-#ifdef DSP_COMPILER
-    const int * restrict ratio_a,
-    const int * restrict ratio_b,
-    const int * restrict ratio_c,
-    const unsigned char * restrict pixels,
-#else
-    const int * __restrict__ ratio_a,
-    const int * __restrict__ ratio_b,
-    const int * __restrict__ ratio_c,
-    const unsigned char * __restrict__ pixels,
-#endif
+    const int * RESTRICT ratio_a,
+    const int * RESTRICT ratio_b,
+    const int * RESTRICT ratio_c,
+    const unsigned char * RESTRICT pixels,
     const int pixel_stride,
     const int bin_width_pow,
     int * result_y,
@@ -86,7 +70,7 @@ void track_iter_inner(
     int centre = ((height-1)/2); // Half pixel error
 
     width = MIN(height, width); // Loop is limited to a circle with a diameter of height
-    pixel_skip = (pixel_stride - width) * 3;
+    pixel_skip = (pixel_stride - width) * CHANNEL_COUNT;
 
     for(i=0; i < height; i++) {
         int norm_i = (i - centre);
@@ -108,7 +92,7 @@ void track_iter_inner(
                 delta_y += norm_i * weight;
                 sum_wij += weight;
             }
-            pixels += 3;
+            pixels += CHANNEL_COUNT;
         }
         pixels += pixel_skip;
     }
@@ -119,37 +103,26 @@ void track_iter_inner(
 void track_inner(
     const int height,
     const int width,
-#ifdef DSP_COMPILER
-    const unsigned char * restrict pixels,
+    const unsigned char * RESTRICT pixels,
     const int pixel_stride,
-    const int * restrict kernel,
+    const int * RESTRICT kernel,
     const int kernel_row_size,
-    const int * restrict target_model,
-#else
-    const unsigned char * __restrict__ pixels,
-    const int pixel_stride,
-    const int * __restrict__ kernel,
-    const int kernel_row_size,
-    const int * __restrict__ target_model,
-#endif
+    const int * RESTRICT target_model,
     const int bin_width_pow,
     const int bins_num,
     const int iter_max,
     int * rect_y,
     int * rect_x
 ) {
-    const int pdf_size = 3 * bins_num * sizeof(int);
+    const int pdf_size = CHANNEL_COUNT * bins_num * sizeof(int);
     int * target_candidate = (int *) malloc(pdf_size);
     int * target_ratio = (int *) malloc(pdf_size);
 
     int iter;
     for(iter=0; iter < iter_max; iter++) {
-#ifndef DSP_COMPILER
-//        std::cerr << iter << "iteration\n";
-#endif
         int k;
         int index;
-        float max_ratio[3] = {0.0f};
+        float max_ratio[CHANNEL_COUNT] = {0.0f};
         float ratio_scale;
 
         int delta_y = 0;
@@ -162,14 +135,15 @@ void track_inner(
             target_candidate,
             target_candidate + bins_num,
             target_candidate + bins_num * 2,
-            pixels + (pixel_stride * (*rect_y) + (*rect_x)) * 3,
+            pixels + (pixel_stride * (*rect_y) + (*rect_x)) * CHANNEL_COUNT,
             pixel_stride,
             kernel,
             kernel_row_size,
             bin_width_pow);
 
+        // Calculate the ratios and maximums
         index = 0;
-        for (k=0; k<3; k++) {
+        for (k=0; k<CHANNEL_COUNT; k++) {
             int b;
             for (b=0; b<bins_num; b++) {
                 if (target_candidate[index] == 0) {
@@ -184,11 +158,12 @@ void track_inner(
             }
         }
 
+        // Scale the ratio array and convert to int
         ratio_scale = pow(
             (INT_MAX * 2.0f * 4.0f) / (height * height * height * max_ratio[0] * max_ratio[1] * max_ratio[2]),
             1.0f / 3.0f);
         index = 0;
-        for (k=0; k<3; k++) {
+        for (k=0; k<CHANNEL_COUNT; k++) {
             int b;
             for (b=0; b<bins_num; b++)
             {
@@ -203,7 +178,7 @@ void track_inner(
             target_ratio,
             target_ratio + bins_num,
             target_ratio + bins_num * 2,
-            pixels + (pixel_stride * (*rect_y) + (*rect_x)) * 3,
+            pixels + (pixel_stride * (*rect_y) + (*rect_x)) * CHANNEL_COUNT,
             pixel_stride,
             bin_width_pow,
             &delta_y,
