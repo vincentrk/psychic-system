@@ -44,7 +44,7 @@ $(EXEC): $(OBJS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 send: $(EXEC)
-	scp $(EXEC) beagle.wijtemans.nl:/tmp/
+	scp $(EXEC) beagle.wijtemans.nl:/home/root/esLAB/test_phil/.
 
 .PHONY: clean all send
 clean:

@@ -49,10 +49,10 @@ MeanShift::MeanShift()
 void  MeanShift::Init_target_frame(const cv::Mat &frame,const cv::Rect &rect)
 {
     target_Region = rect;
-    float kernel_sum = Epanechnikov_kernel(kernel, rect.height, rect.width);
-    kernel *= INT_MAX / kernel_sum; // pre-scale kernel
+    int kernel_sum = Epanechnikov_kernel(kernel, rect.height, rect.width);
+    kernel *= (INT_MAX / kernel_sum); // pre-scale kernel
 //    print_mat(kernel);
-    kernel.convertTo(kernel, CV_32S);
+//    kernel.convertTo(kernel, CV_32S);
 //    std::cerr << INT_MAX << " max\n";
 //    print_mat_int(kernel);
     target_model = pdf_representation(frame,target_Region,0);
@@ -64,7 +64,7 @@ float & MeanShift::kernel_elem(int row, int col, int height, int width) {
     return (kernel.at<float>(nrow, ncol));
 }
 
-float  MeanShift::Epanechnikov_kernel(cv::Mat &kernel, int h, int w)
+int MeanShift::Epanechnikov_kernel(cv::Mat &kernel, int h, int w)
 {
     /* Example kernels, with quarter kernel
        0 0 0 0   2 1 0  This needs to keep the zeros
@@ -81,18 +81,22 @@ float  MeanShift::Epanechnikov_kernel(cv::Mat &kernel, int h, int w)
      */
     // Halve the size, round up, add one for the zero row
     // (x+1+1)/2 == x/2+1
-    kernel.create(h/2+1, w/2+1, CV_32F);
+    kernel.create(h/2+2, w/2+2, CV_32S);
 //    std::cout << "kernel size: " << h << ";" << w << "\n";
 
-    float kernel_sum = 0.0;
+    int kernel_sum = 0;
     for(int i=0;i<h;i++)
     {
+	int scale = INT_MAX/(h*w);
+	int hsqrt = (h>>2)*scale;
+	int wsqrt = (w>>2)*scale;
+
         for(int j=0;j<w;j++)
         {
-            float x = static_cast<float>(i - h/2);
-            float  y = static_cast<float> (j - w/2);
-            float norm_x = x*x/(h*h/4)+y*y/(w*w/4);
-            float result =norm_x<1?(1.0-norm_x):0;
+            int x = (i - h/2)*scale;
+            int  y = (j - w/2)*scale;
+            int norm_x = (x>>2)/(hsqrt/4)+(y>>2)/(wsqrt/4);
+	    int result =norm_x<scale?(scale-norm_x):0;
             kernel_elem(i, j, h, w) = result;
             kernel_sum += result;
         }
