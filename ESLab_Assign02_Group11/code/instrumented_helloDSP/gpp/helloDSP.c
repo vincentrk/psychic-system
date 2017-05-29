@@ -34,7 +34,7 @@ extern "C"
 #define NUM_ARGS 1
 
     /* Argument size passed to the control message queue */
-#define ARG_SIZE 256
+#define ARG_SIZE 640*480*3/128
 
     /* ID of the POOL used by helloDSP. */
 #define SAMPLE_POOL_ID  0
