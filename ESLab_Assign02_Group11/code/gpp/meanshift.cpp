@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <new>
 #include <stdexcept>
+#include "Timer.h"
 
 void print_mat(cv::Mat &mat)
 {
@@ -177,6 +178,9 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
 
 cv::Rect MeanShift::track(const cv::Mat &next_frame)
 {
+    Timer totalTimer("Total Frame");
+    Timer acquireTimer("Pool Acquire");
+    Timer pFrameTimer("Process Frame");
     int offset_y = std::max(0, target_Region.y - target_Region.height);
     int offset_x = std::max(0, target_Region.x - target_Region.width);
     int size_y = std::min(next_frame.rows - offset_y, target_Region.height * (1+2));
@@ -186,6 +190,8 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
     int rect_x = target_Region.x - offset_x;
 
 #ifdef USE_DSP
+    totalTimer.Start();
+    acquireTimer.Start();
     int * buf = pool_notify_GetBuf();
     unsigned int buf_size = pool_notify_GetSize();
 
@@ -205,7 +211,8 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
             next_frame.ptr<cv::Vec3b>(offset_y + y) + offset_x,
             size_x * CHANNEL_COUNT);
     }
-
+    acquireTimer.Stop();
+    pFrameTimer.Start();
     pool_notify_Execute();
     pool_notify_Result();
     if (buf[0] != MEANSHIFT_MSG_SUCCESS) {
@@ -214,6 +221,11 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
     }
     rect_y = buf[1];
     rect_x = buf[2];
+    pFrameTimer.Stop();
+    totalTimer.Stop();
+    totalTimer.Print();
+    acquireTimer.Stop();
+    pFrameTimer.Stop();
 #else
     for (int y=0; y<size_y; y++) {
         memcpy(
