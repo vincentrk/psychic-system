@@ -224,8 +224,8 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
     pFrameTimer.Stop();
     totalTimer.Stop();
     totalTimer.Print();
-    acquireTimer.Stop();
-    pFrameTimer.Stop();
+    acquireTimer.Print();
+    pFrameTimer.Print();
 #else
     for (int y=0; y<size_y; y++) {
         memcpy(
