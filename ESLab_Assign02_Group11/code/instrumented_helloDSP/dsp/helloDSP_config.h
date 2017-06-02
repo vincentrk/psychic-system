@@ -43,7 +43,7 @@ extern "C" {
 #define SAMPLE_POOL_ID      0
 
 /* Argument size passed to the control message queue */
-#define ARG_SIZE 32//640*480*3/16
+#define ARG_SIZE 786432//640*480*3/16
 
 /* Control message data structure. */
 /* Must contain a reserved space for the header */
