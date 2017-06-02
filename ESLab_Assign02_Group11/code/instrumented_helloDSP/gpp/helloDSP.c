@@ -267,7 +267,7 @@ extern "C"
         DSP_STATUS  status = DSP_SOK;
         Uint16 sequenceNumber = 0;
         Uint16 msgId = 0;
-        Uint32 i;
+        Uint32 i,n;
         ControlMsg *msg;
 
 	double messagePassing[numIterations];
@@ -326,7 +326,10 @@ extern "C"
                     msgId = MSGQ_getMsgId(msg);
                     MSGQ_setMsgId(msg, msgId);
 
-		    restartTimer(&execDSP);	
+		    restartTimer(&execDSP);
+		    for (n;n<ARG_SIZE;n++){
+			msg->arg[n] = n;
+		    }	
                     status = MSGQ_put(SampleDspMsgq, (MsgqMsg) msg);
                     if (DSP_FAILED(status))
                     {
