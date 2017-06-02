@@ -334,7 +334,7 @@ extern "C"
                     MSGQ_setMsgId(msg, msgId);
    
 		    restartTimer(&totalRT);
-		    memcopy(msg->arg1,dummy_msg,ARG_SIZE);
+		    memcpy(msg->arg1,dummy_msg,ARG_SIZE);
 		    restartTimer(&commRT);
 
                     status = MSGQ_put(SampleDspMsgq, (MsgqMsg) msg);
