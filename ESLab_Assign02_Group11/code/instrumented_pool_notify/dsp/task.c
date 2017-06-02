@@ -119,12 +119,12 @@ Int Task_execute (Task_TransferInfo * info)
     BCACHE_inv ((Ptr)buf, length, TRUE) ;
 
 	//call the functionality to be performed by dsp
-    sum = sum_dsp();
+    //sum = sum_dsp();
     
 	//notify that we are done
     NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)0);
 	//notify the result
-    NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)sum);
+    //NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)sum);
 
     return SYS_OK;
 }

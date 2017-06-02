@@ -106,7 +106,7 @@ STATIC Uint32  pool_notify_NumIterations ;
  *          application.
  *  ============================================================================
  */
-Uint16 * pool_notify_DataBuf = NULL ;
+Char8 * pool_notify_DataBuf = NULL ;
 
 
 /** ============================================================================
@@ -366,42 +366,43 @@ int sum_dsp(unsigned char* buf, int length)
  */
 NORMAL_API DSP_STATUS pool_notify_Execute (IN Uint32 numIterations, Uint8 processorId)
 {
-    DSP_STATUS  status    = DSP_SOK ;
+	DSP_STATUS  status    = DSP_SOK ;
+	int i=0;
 
-    long long start;
-
+	long long start;
+	Char8 dummy_msg[pool_notify_BufferSize];
 	#if defined(DSP)
-    unsigned char *buf_dsp;
+	unsigned char *buf_dsp;
 	#endif
 
 	#ifdef DEBUG
-    printf ("Entered pool_notify_Execute ()\n") ;
+	printf ("Entered pool_notify_Execute ()\n") ;
 	#endif
 
-    unit_init();
+	for (i=0;i<pool_notify_BufferSize;i++){
+		dummy_msg[pool_notify_BufferSize] = i;
+	}
 
-    start = get_usec();
+	for (i=0;i<numIterations;i++){
+		start = get_usec();
+		//TotalTimer starts here
+		memcpy(pool_notify_DataBuf,dummy_msg,pool_notify_BufferSize);
+		//ComTimer should start here
+		POOL_writeback (POOL_makePoolId(processorId, SAMPLE_POOL_ID),
+			    pool_notify_DataBuf,
+			    pool_notify_BufferSize);
 
-	#if !defined(DSP)
-    printf(" Result is %d \n", sum_dsp(pool_notify_DataBuf,pool_notify_BufferSize));
-	#endif
+		POOL_translateAddr ( POOL_makePoolId(processorId, SAMPLE_POOL_ID),
+				 (void*)&buf_dsp,
+				 AddrType_Dsp,
+				 (Void *) pool_notify_DataBuf,
+				 AddrType_Usr) ;
+		NOTIFY_notify (processorId,pool_notify_IPS_ID,pool_notify_IPS_EVENTNO,1);
 
-	#if defined(DSP)
-    POOL_writeback (POOL_makePoolId(processorId, SAMPLE_POOL_ID),
-                    pool_notify_DataBuf,
-                    pool_notify_BufferSize);
-
-    POOL_translateAddr ( POOL_makePoolId(processorId, SAMPLE_POOL_ID),
-                         (void*)&buf_dsp,
-                         AddrType_Dsp,
-                         (Void *) pool_notify_DataBuf,
-                         AddrType_Usr) ;
-    NOTIFY_notify (processorId,pool_notify_IPS_ID,pool_notify_IPS_EVENTNO,1);
-
-    sem_wait(&sem);
-	#endif
-
-    printf("Sum execution time %lld us.\n", get_usec()-start);
+		sem_wait(&sem);
+		//Timer should be stopped here
+		printf("Response time iteration %d:  %lld us.\n", i,get_usec()-start);
+	}
 
     return status ;
 }
