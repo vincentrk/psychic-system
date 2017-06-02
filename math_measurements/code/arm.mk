@@ -16,16 +16,20 @@ CFLAGS=$(DEFS) $(INCLUDES)          \
 	  --sysroot=/opt/rootfs			\
       -mlittle-endian               \
       -march=armv5t                 \
-      -mtune=arm9tdmi               \
-      -msoft-float                  \
+	  -funroll-loops								\
+      -mtune=cortex-a8               \
       -Uarm                         \
       -marm                         \
+	  -mfpu=neon									\
+	  -mfloat-abi=softfp					\
+	  -ftree-vectorize						\
+	  -ffast-math									\
       -Wno-trigraphs                \
-      -fno-strict-aliasing          \
+	  -funsafe-math-optimizations			\
       -fno-common                   \
-      -fno-omit-frame-pointer       \
+      -fomit-frame-pointer       \
       -mapcs                        \
-      -mabi=aapcs-linux
+	  -mabi=aapcs-linux
 
 all: clean $(EXEC)
 
