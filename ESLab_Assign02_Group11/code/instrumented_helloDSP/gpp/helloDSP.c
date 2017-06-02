@@ -112,8 +112,8 @@ extern "C"
     /* Extern declaration to the default DSP/BIOS LINK configuration structure. */
     extern LINKCFG_Object LINKCFG_config;
 
-    Timer dspInit;
-    //initTimer(&dspInit, "Initialise DSP Timer");
+
+
 
 #if defined (VERIFY_DATA)
     /** ============================================================================
@@ -270,10 +270,12 @@ extern "C"
         Uint32 i,n;
         ControlMsg *msg;
 
-	double messagePassing[numIterations];
-	Timer execDSP;
-	initTimer(&execDSP, "DSP Execution Timer");
-	startTimer(&execDSP);
+	double totalRT_vals,commRT_vals[numIterations];
+	Timer totalRT,commRT,;
+	initTimer(&totalRT, "Total RT");
+	initTimer(&commRT, "Comm RT");
+	startTimer(&totalRT);
+	startTimer(&commRT);
         SYSTEM_0Print("Entered helloDSP_Execute ()\n");
 	int ind;
 #if defined (PROFILE)
@@ -307,9 +309,10 @@ extern "C"
 	    }
             else if (msg->command == 0x02)
             {
-		stopTimer(&execDSP);
-		printTimer(&execDSP);
-		messagePassing[i-2] = execDSP.elapsedTime; 
+		stopTimer(&totalRT);
+		stopTimer(&commRT);
+		totalRT_vals[i-2] = totalRT.elapsedTime; 
+		commRT_vals[i-2] = commRT.elapsedTime; 
 		SYSTEM_1Print("Message received: %s\n", (Uint32) msg->arg1);
 	    }
 
@@ -326,10 +329,11 @@ extern "C"
                     msgId = MSGQ_getMsgId(msg);
                     MSGQ_setMsgId(msg, msgId);
 
-		    restartTimer(&execDSP);
+		    restartTimer(&totalRT);
 		    for (n;n<ARG_SIZE;n++){
 			msg->arg[n] = n;
 		    }	
+		    restartTimer(&commRT);
                     status = MSGQ_put(SampleDspMsgq, (MsgqMsg) msg);
                     if (DSP_FAILED(status))
                     {
@@ -365,7 +369,12 @@ extern "C"
 	printTimer(&dspInit);
 	for(ind = 0; ind < numIterations ; ++ind)
 	{
-		printf("%g\n ",messagePassing[ind]);
+		printf("%g\n ",totalRT_vals[ind]);
+
+	}
+	for(ind = 0; ind < numIterations ; ++ind)
+	{
+		printf("%g\n ",commRT_vals[ind]);
 	}
         SYSTEM_0Print("Leaving helloDSP_Execute ()\n");
 
