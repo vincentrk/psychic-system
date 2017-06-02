@@ -268,7 +268,7 @@ extern "C"
         Uint16 msgId = 0;
         Uint32 i,n;
         ControlMsg *msg;
-	Uint32 dummy_msg;
+	Uint32 dummy_msg[ARG_SIZE];
 	
 	double totalRT_vals[numIterations],commRT_vals[numIterations];
 	Timer totalRT,commRT;
@@ -276,7 +276,7 @@ extern "C"
 	initTimer(&commRT, "Comm RT");
 	startTimer(&totalRT);
 	startTimer(&commRT);
-	for (n;n<ARG_SIZE;n++){
+	for (n=0;n<ARG_SIZE;n++){
 		dummy_msg[n] = n;
 	}
 
