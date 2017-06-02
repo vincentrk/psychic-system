@@ -145,8 +145,7 @@ extern "C"
         SYSTEM_0Print("Entered helloDSP_Create ()\n");
 
 	// Create a timer to check dsp initialisation time
-        initTimer(&dspInit, "Initialise DSP Timer");
-	startTimer(&dspInit);
+
 	/* Create and initialize the proc object. */
         status = PROC_setup(NULL);
 
@@ -269,13 +268,18 @@ extern "C"
         Uint16 msgId = 0;
         Uint32 i,n;
         ControlMsg *msg;
-
-	double totalRT_vals,commRT_vals[numIterations];
+	Uint32 dummy_msg;
+	
+	double totalRT_vals[numIterations],commRT_vals[numIterations];
 	Timer totalRT,commRT,;
 	initTimer(&totalRT, "Total RT");
 	initTimer(&commRT, "Comm RT");
 	startTimer(&totalRT);
 	startTimer(&commRT);
+	for (n;n<ARG_SIZE;n++){
+		dummy_msg[n] = n;
+	}
+
         SYSTEM_0Print("Entered helloDSP_Execute ()\n");
 	int ind;
 #if defined (PROFILE)
@@ -305,7 +309,7 @@ extern "C"
             if (msg->command == 0x01)
 	    {
                 SYSTEM_1Print("Message received: %s\n", (Uint32) msg->arg1);
-            	stopTimer(&dspInit);
+
 	    }
             else if (msg->command == 0x02)
             {
@@ -328,11 +332,9 @@ extern "C"
                 {
                     msgId = MSGQ_getMsgId(msg);
                     MSGQ_setMsgId(msg, msgId);
-
+		    
 		    restartTimer(&totalRT);
-		    for (n;n<ARG_SIZE;n++){
-			msg->arg[n] = n;
-		    }	
+		    memcopy(msg->arg1,dummy_msg,ARG_SIZE);
 		    restartTimer(&commRT);
                     status = MSGQ_put(SampleDspMsgq, (MsgqMsg) msg);
                     if (DSP_FAILED(status))
@@ -366,12 +368,13 @@ extern "C"
             SYSTEM_GetProfileInfo(numIterations);
         }
 #endif
-	printTimer(&dspInit);
+        SYSTEM_0Print("Total:\n");
 	for(ind = 0; ind < numIterations ; ++ind)
 	{
 		printf("%g\n ",totalRT_vals[ind]);
 
 	}
+        SYSTEM_0Print("Without memcopy:\n");
 	for(ind = 0; ind < numIterations ; ++ind)
 	{
 		printf("%g\n ",commRT_vals[ind]);
