@@ -34,7 +34,7 @@ extern "C"
 #define NUM_ARGS 1
 
     /* Argument size passed to the control message queue */
-#define ARG_SIZE 32//640*480*3/16
+#define ARG_SIZE 786432//640*480*3/16
 
     /* ID of the POOL used by helloDSP. */
 #define SAMPLE_POOL_ID  0
@@ -268,7 +268,7 @@ extern "C"
         Uint16 msgId = 0;
         Uint32 i,n;
         ControlMsg *msg;
-	Uint32 dummy_msg;
+	Char8 dummy_msg[ARG_SIZE];
 	
 	double totalRT_vals[numIterations],commRT_vals[numIterations];
 	Timer totalRT,commRT;
@@ -276,7 +276,7 @@ extern "C"
 	initTimer(&commRT, "Comm RT");
 	startTimer(&totalRT);
 	startTimer(&commRT);
-	for (n;n<ARG_SIZE;n++){
+	for (n=0;n<ARG_SIZE;n++){
 		dummy_msg[n] = n;
 	}
 
