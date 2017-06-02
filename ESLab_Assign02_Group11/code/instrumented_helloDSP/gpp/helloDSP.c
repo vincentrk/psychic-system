@@ -271,7 +271,7 @@ extern "C"
 	Uint32 dummy_msg;
 	
 	double totalRT_vals[numIterations],commRT_vals[numIterations];
-	Timer totalRT,commRT,;
+	Timer totalRT,commRT;
 	initTimer(&totalRT, "Total RT");
 	initTimer(&commRT, "Comm RT");
 	startTimer(&totalRT);
