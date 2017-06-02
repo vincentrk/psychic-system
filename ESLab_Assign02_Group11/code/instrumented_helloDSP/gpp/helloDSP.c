@@ -34,7 +34,7 @@ extern "C"
 #define NUM_ARGS 1
 
     /* Argument size passed to the control message queue */
-#define ARG_SIZE 256
+#define ARG_SIZE 32//640*480*3/16
 
     /* ID of the POOL used by helloDSP. */
 #define SAMPLE_POOL_ID  0
@@ -332,10 +332,11 @@ extern "C"
                 {
                     msgId = MSGQ_getMsgId(msg);
                     MSGQ_setMsgId(msg, msgId);
-		    
+   
 		    restartTimer(&totalRT);
 		    memcopy(msg->arg1,dummy_msg,ARG_SIZE);
 		    restartTimer(&commRT);
+
                     status = MSGQ_put(SampleDspMsgq, (MsgqMsg) msg);
                     if (DSP_FAILED(status))
                     {

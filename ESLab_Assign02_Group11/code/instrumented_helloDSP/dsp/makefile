@@ -240,7 +240,7 @@ $(OBJDIR_R)/%.obj : %.s62
 	@$(BASE_COMPILER)/bin/$(CC) $(DEFS) $(CFLAGS_R) $(CINCLUDES) -fr$(OBJDIR_R) $<
 
 send:
-	scp $(BINDIR_R)/$(BIN) root@192.168.0.202:/home/root/esLAB/helloDSP/.
+	scp $(BINDIR_R)/$(BIN) beagle.wijtemans.nl:/home/root/esLAB/test_phil/.
 
 .PHONY: clean
 clean:
