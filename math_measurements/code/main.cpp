@@ -87,7 +87,7 @@ int main(int argc, char ** argv)
         float32x4_t Vec1,Vec2,Vec3;
 
         Vec1 = vld1q_f32(floatVect1 + i);
-        Vec2 = vld1q_f32(floatVect1 + i);
+        Vec2 = vld1q_f32(floatVect2 + i);
 
         Vec3 = vmulq_f32(Vec1,Vec2);
 
