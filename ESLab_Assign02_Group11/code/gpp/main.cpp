@@ -7,85 +7,53 @@
 #include "markers.h"
 #endif
 
+#define pool_notify_IPS_ID                0
+#define pool_notify_IPS_EVENTNO           5
+
 int main(int argc, char ** argv)
 {
-    Timer totalTimer("Total Time");
-    Timer readTimer("Reading Time");
-    Timer writeTimer("Writing Time");
-    Timer trackTimer("Tracking Time");
+    Timer intmult("int mult");
+    Timer floatmult("float mult");
+    Timer intdiv("int div");
+    Timer floatdiv("float div");
 
     cv::VideoCapture frame_capture;
-    if(argc<4)
+    if(argc<2)
     {
-        std::cout <<"specifiy an input video file to track" << std::endl;
-        std::cout <<"Usage:  " << argv[0] << " car.avi meanshift.dsp buffersize" << std::endl;
+        std::cout <<"specifiy dsp file" << std::endl;
+        std::cout <<"Usage:  " << argv[0] << " meanshift.dsp" << std::endl;
         return -1;
-    }
-    else
-    {
-        frame_capture = cv::VideoCapture( argv[1] );
     }
 
 #ifdef USE_DSP
     // Set up DSP
-    Char8 * dspExecutable = argv[2];
-    Char8 * strBufferSize = argv[3];
+    Char8 * dspExecutable = argv[1];
+    Char8 * strBufferSize = "128";
     if (!pool_notify_Main(dspExecutable, strBufferSize)) {
         std::cout << "Error setting up DSP" << std::endl;
         return -1;
     }
 #endif
 
-    // this is used for testing the car video
-    // instead of selection of object of interest using mouse
-    cv::Rect rect(228,367,86,58);
-    cv::Mat frame;
-    frame_capture.read(frame);
-    
-    MeanShift ms; // creat meanshift obj
-    ms.Init_target_frame(frame,rect); // init the meanshift
+pool_notify_Execute();
 
-    {
-    int codec = CV_FOURCC('F', 'L', 'V', '1');
-    cv::VideoWriter writer("tracking_result.avi", codec, 20, cv::Size(frame.cols,frame.rows));
+pool_notify_Result();
+intmult.Start();
 
-    totalTimer.Start();
-    #ifndef ARMCC
-    MCPROF_START();
-    #endif
-    int TotalFrames = 32;
-    int fcount;
-    for(fcount=0; fcount<TotalFrames; ++fcount)
-    {
-        // read a frame
-        readTimer.Start();
-        int status = frame_capture.read(frame);
-        if( 0 == status ) break;
-        readTimer.Pause();
+pool_notify_Result();
+intmult.Stop();
+floatmult.Start();
 
-        // track object
-        #ifndef ARMCC
-        // MCPROF_START();
-        #endif
-        trackTimer.Start();
-        cv::Rect ms_rect =  ms.track(frame);
-        trackTimer.Pause();
-        #ifndef ARMCC
-        // MCPROF_STOP();
-        #endif
-        
-        // mark the tracked object in frame
-        writeTimer.Start();
-        cv::rectangle(frame,ms_rect,cv::Scalar(0,0,255),3);
+pool_notify_Result();
+floatmult.Stop();
+intdiv.Start();
 
-        // write the frame
-        writer << frame;
-        writeTimer.Pause();
-    }
-    #ifndef ARMCC
-    MCPROF_STOP();
-    #endif
-    totalTimer.Pause();
+pool_notify_Result();
+intdiv.Stop();
+floatdiv.Start();
+
+pool_notify_Result();
+floatdiv.Stop();
 
 #ifdef USE_DSP
     // Stop DSP
@@ -93,21 +61,10 @@ int main(int argc, char ** argv)
     pool_notify_Delete (processorId);
 #endif
 
-    totalTimer.Print();
-    readTimer.Print();
-    writeTimer.Print();
-    trackTimer.Print();
-
-    std::cout << "Processed " << fcount << " frames" << std::endl;
-    std::cout << "Time: " << totalTimer.GetTime() <<" sec\nFPS : " << fcount/totalTimer.GetTime() << std::endl;
-
-    } // Destroy writer to flush output to file
-    #ifdef ARMCC
-    std::cout << "4bf41e5572f56bfedb3182781e24d4ac  is expected...\n";
-    #else
-    std::cout << "051a524f68785b2f9c7fbb0754facb35  is expected...\n";
-    #endif
-    system("md5sum tracking_result.avi");
+    intmult.Print();
+    floatmult.Print();
+    intdiv.Print();
+    floatdiv.Print();
 
     return 0;
 }
