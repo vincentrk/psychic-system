@@ -37,7 +37,7 @@ $(EXEC): $(OBJS)
 	$(CC) $(CFLAGS) -c $< -o $@ 
 
 send: $(EXEC)
-	scp $(EXEC) beagle.wijtemans.nl:/tmp/
+	scp $(EXEC) run.sh beagle.wijtemans.nl:/tmp/
 
 .PHONY: clean all send
 clean:
