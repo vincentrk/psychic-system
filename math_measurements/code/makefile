@@ -16,20 +16,21 @@ CFLAGS=$(DEFS) $(INCLUDES)          \
 	  --sysroot=/opt/rootfs			\
       -mlittle-endian               \
       -march=armv5t                 \
-	  -funroll-loops								\
-      -mtune=cortex-a8               \
+      -mtune=arm9tdmi               \
+      -msoft-float                  \
       -Uarm                         \
       -marm                         \
-	  -mfpu=neon									\
-	  -mfloat-abi=softfp					\
-	  -ftree-vectorize						\
-	  -ffast-math									\
+      -mfpu=neon                    \
+      -mfloat-abi=softfp            \
+      -ftree-vectorize              \
+      -ffast-math                   \
+      -funsafe-math-optimizations   \
       -Wno-trigraphs                \
-	  -funsafe-math-optimizations			\
+      -fno-strict-aliasing          \
       -fno-common                   \
-      -fomit-frame-pointer       \
+      -fno-omit-frame-pointer       \
       -mapcs                        \
-	  -mabi=aapcs-linux
+      -mabi=aapcs-linux
 
 all: clean $(EXEC)
 
@@ -41,7 +42,7 @@ $(EXEC): $(OBJS)
 	$(CC) $(CFLAGS) -c $< -o $@ 
 
 send: $(EXEC)
-	scp $(EXEC) beagle.wijtemans.nl:/tmp/
+	scp $(EXEC) run.sh beagle.wijtemans.nl:/tmp/
 
 .PHONY: clean all send
 clean:

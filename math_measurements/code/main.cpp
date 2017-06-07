@@ -1,18 +1,22 @@
 #include <iostream>
-#include "Timer.h"
+#include <stdlib.h>
 #include <math.h>
 #include <arm_neon.h>
 
+#include "HiResTimer.h"
+
+
 int main(int argc, char ** argv)
 {
-    Timer armIntMultTimer("ARM Integer Multiplicaiton");
-    Timer armIntDivTimer("ARM Integer Division");
-    Timer armFloatMultTimer("ARM Floating Point Multiplicaiton");
-    Timer armFloatDivTimer("ARM Floating Point Division");
-
-    
+	long tStart;
+	long tIntMult, tIntDiv, tFloatMult, tFloatDiv;
+	Timer_Init();
 
     int vectorSize = 65536;
+    if (argc >= 2)
+    {
+        vectorSize = atoi(argv[1]);
+    }
 
     int* __restrict intVect1;
     int* __restrict intVect2;
@@ -30,97 +34,186 @@ int main(int argc, char ** argv)
     int i;
     unsigned int isum;
     float fsum;
+
+
+    // Integer multiplication
     for(i=0; i<vectorSize; i++)
     {
         intVect1[i] = rand() % 100 + 1;
         intVect2[i] = rand() % 100 + 1;
-        floatVect1[i] = static_cast <float32_t> (rand()) / (static_cast <float32_t> (RAND_MAX/100)) + 1.0f; 
-        floatVect2[i] = static_cast <float32_t> (rand()) / (static_cast <float32_t> (RAND_MAX/100)) + 1.0f;
+        intVect3[i] = 0;
     }
-
-    armIntMultTimer.Start();
     for(i=0; i<vectorSize; i+=4)
-    { 
+    {
         int32x4_t Vec1,Vec2,Vec3;
         Vec1 = vld1q_s32(intVect1 + i);
         Vec2 = vld1q_s32(intVect2 + i);
-
         Vec3 = vmulq_s32(Vec1,Vec2);
-
         vst1q_s32(intVect3 + i ,Vec3);
-
-
-        // intVect3[i] = intVect1[i] * intVect2[i];
     }
-    armIntMultTimer.Pause();
+    tStart = HiResTime();
+    for(i=0; i<vectorSize; i+=4)
+    {
+        int32x4_t Vec1,Vec2,Vec3;
+        Vec1 = vld1q_s32(intVect1 + i);
+        Vec2 = vld1q_s32(intVect2 + i);
+        Vec3 = vmulq_s32(Vec1,Vec2);
+        vst1q_s32(intVect3 + i ,Vec3);
+    }
+    tIntMult = HiResTime() - tStart;
     isum = 0;
-    for(i=0; i<vectorSize; i++)
+    for( i=0; i<vectorSize; i++)
     {
         isum += intVect3[i];
     }
-    std::cout << "Sum int mult: " << isum << std::endl;
 
-    // armIntDivTimer.Start();
-    // for(i=0; i<vectorSize; i++)
-    // {
-    //     // int32x4 Vec1,Vec2,Vec3;
-    //     // Vec1 = vld_s32(intVect1);
-    //     // Vec2 = vld_s32(intVect2);
+    // Integer division
+    for(i=0; i<vectorSize; i++)
+    {
+        intVect1[i] = rand() % 100 + 1;
+        intVect2[i] = rand() % 100 + 1;
+        intVect3[i] = 0;
+    }
+    for(i=0; i<vectorSize; i+=4)
+    {
+        int32x4_t Vec1,Vec3;
+        float32x4_t Vecf1,Vecf2,Vecf3;
 
-    //     // Vec3 = vmul_s32(Vec1,Vec2);
+        Vec1 = vld1q_s32(intVect1 + i);
+        Vecf1 = vcvtq_f32_s32(Vec1);
 
-    //     // vst1q_s32(intVect3,Vec3);
+        Vecf2 = vrecpeq_f32(Vecf1);
+        Vecf2 = vmulq_f32(vrecpsq_f32(Vecf1, Vecf2), Vecf2);
+        Vecf2 = vmulq_f32(vrecpsq_f32(Vecf1, Vecf2), Vecf2);
 
-    //     intVect3[i] = intVect1[i] / intVect2[i];
-    // }
-    // armIntDivTimer.Pause();
-    // isum = 0;
-    // for(i=0; i<vectorSize; i++)
-    // {
-    //     isum += intVect3[i];
-    // }
-    // std::cout << "Sum int div: " << isum << std::endl;
+        Vec1 = vld1q_s32(intVect1 + i);
+        Vecf1 = vcvtq_f32_s32(Vec1);
 
-    armFloatMultTimer.Start();
+        Vecf3 = vmulq_f32(Vecf1,Vecf2);
+
+        Vec3 = vcvtq_s32_f32(Vecf3);
+        vst1q_s32(intVect3 + i, Vec3);
+    }
+	tStart = HiResTime();
+    for(i=0; i<vectorSize; i+=4)
+    {
+        int32x4_t Vec1,Vec3;
+        float32x4_t Vecf1,Vecf2,Vecf3;
+
+        Vec1 = vld1q_s32(intVect1 + i);
+        Vecf1 = vcvtq_f32_s32(Vec1);
+
+        Vecf2 = vrecpeq_f32(Vecf1);
+        Vecf2 = vmulq_f32(vrecpsq_f32(Vecf1, Vecf2), Vecf2);
+        Vecf2 = vmulq_f32(vrecpsq_f32(Vecf1, Vecf2), Vecf2);
+
+        Vec1 = vld1q_s32(intVect1 + i);
+        Vecf1 = vcvtq_f32_s32(Vec1);
+
+        Vecf3 = vmulq_f32(Vecf1,Vecf2);
+
+        Vec3 = vcvtq_s32_f32(Vecf3);
+        vst1q_s32(intVect3 + i, Vec3);
+    }
+    tIntDiv = HiResTime() - tStart;
+    for (i=0; i<vectorSize; i++)
+    {
+        fsum += floatVect3[i];
+    }
+
+    // Float multiplication
+    for(i=0; i<vectorSize; i++)
+    {
+        floatVect1[i] = static_cast <float32_t> (rand()) / (static_cast <float32_t> (RAND_MAX/100)) + 1.0f; 
+        floatVect2[i] = static_cast <float32_t> (rand()) / (static_cast <float32_t> (RAND_MAX/100)) + 1.0f;
+        floatVect3[i] = 0;
+    }
+    for(i=0; i<vectorSize; i+=4)
+    {
+        float32x4_t Vec1,Vec2,Vec3;
+        Vec1 = vld1q_f32(floatVect1 + i);
+        Vec2 = vld1q_f32(floatVect2 + i);
+        Vec3 = vmulq_f32(Vec1,Vec2);
+        vst1q_f32(floatVect3 + i,Vec3);
+    }
+	tStart = HiResTime();
+    for(i=0; i<vectorSize; i+=4)
+    {
+        float32x4_t Vec1,Vec2,Vec3;
+        Vec1 = vld1q_f32(floatVect1 + i);
+        Vec2 = vld1q_f32(floatVect2 + i);
+        Vec3 = vmulq_f32(Vec1,Vec2);
+        vst1q_f32(floatVect3 + i,Vec3);
+    }
+    tFloatMult = HiResTime() - tStart;
+    fsum = 0.0f;
+    for (i=0; i<vectorSize; i++)
+    {
+        fsum += floatVect3[i];
+    }
+
+    // Float division
+    for(i=0; i<vectorSize; i++)
+    {
+        floatVect1[i] = static_cast <float32_t> (rand()) / (static_cast <float32_t> (RAND_MAX/100)) + 1.0f; 
+        floatVect2[i] = static_cast <float32_t> (rand()) / (static_cast <float32_t> (RAND_MAX/100)) + 1.0f;
+        floatVect3[i] = 0;
+    }
     for(i=0; i<vectorSize; i+=4)
     {
         float32x4_t Vec1,Vec2,Vec3;
 
+        Vec1 = vld1q_f32(floatVect2 + i);
+        Vec2 = vrecpeq_f32(Vec1);
+        Vec2 = vmulq_f32(vrecpsq_f32(Vec1, Vec2), Vec2);
+        Vec2 = vmulq_f32(vrecpsq_f32(Vec1, Vec2), Vec2);
+
         Vec1 = vld1q_f32(floatVect1 + i);
-        Vec2 = vld1q_f32(floatVect2 + i);
 
         Vec3 = vmulq_f32(Vec1,Vec2);
 
         vst1q_f32(floatVect3 + i,Vec3);
-
-        // floatVect3[i] = floatVect1[i] * floatVect2[i];
     }
-    armFloatMultTimer.Pause();
-    fsum = 0.0f;
-    for(i=0; i<vectorSize; i++)
+	tStart = HiResTime();
+    for(i=0; i<vectorSize; i+=4)
+    {
+        float32x4_t Vec1,Vec2,Vec3;
+
+        Vec1 = vld1q_f32(floatVect2 + i);
+        Vec2 = vrecpeq_f32(Vec1);
+        Vec2 = vmulq_f32(vrecpsq_f32(Vec1, Vec2), Vec2);
+        Vec2 = vmulq_f32(vrecpsq_f32(Vec1, Vec2), Vec2);
+
+        Vec1 = vld1q_f32(floatVect1 + i);
+
+        Vec3 = vmulq_f32(Vec1,Vec2);
+
+        vst1q_f32(floatVect3 + i,Vec3);
+    }
+    tFloatDiv = HiResTime() - tStart;
+    for (i=0; i<vectorSize; i++)
     {
         fsum += floatVect3[i];
     }
-    std::cout << "Sum float mult: " << fsum << std::endl;
 
-    armFloatDivTimer.Start();
-    for(i=0; i<vectorSize; i++)
-    {
-        floatVect3[i] = floatVect1[i] / floatVect2[i];
-    }
-    armFloatDivTimer.Pause();
-    fsum = 0.0f;
-    for(i=0; i<vectorSize; i++)
-    {
-        fsum += floatVect3[i];
-    }
-    std::cout << "Sum float div: " << fsum << std::endl;
+    std::cerr << "Sum: " << isum << std::endl;
+    std::cerr << "Sum: " << fsum << std::endl;
 
+    // Clean up
+    Timer_DeInit();
+    free(intVect1);
+    free(intVect2);
+    free(intVect3);
+    free(floatVect1);
+    free(floatVect2);
+    free(floatVect3);
 
-    armIntMultTimer.Print();
-    armIntDivTimer.Print();
-    armFloatMultTimer.Print();
-    armFloatDivTimer.Print();
+    std::cout << vectorSize
+            << "," << tIntMult
+            << "," << tIntDiv
+            << "," << tFloatMult
+            << "," << tFloatDiv
+            << "\n";
 
     return 0;
 }
