@@ -351,6 +351,12 @@ NORMAL_API DSP_STATUS pool_notify_Execute ()
 	#endif
 
 	#if defined(DSP)
+
+	// Write to main memory
+	POOL_writeback (POOL_makePoolId(processorId, SAMPLE_POOL_ID),
+	               pool_notify_DataBuf,
+	               pool_notify_BufferSize);
+
 	// Notify DSP
 	NOTIFY_notify (processorId,pool_notify_IPS_ID,pool_notify_IPS_EVENTNO,1);
 
@@ -366,12 +372,13 @@ NORMAL_API DSP_STATUS pool_notify_Result ()
 	#if defined(DSP)
 
 	// Wait for signal from DSP
-	sem_wait(&sem);
+	while (sem_trywait(&sem) != 0) {}
+//	sem_wait(&sem);
 
 	// Invalidate cache
-//	POOL_invalidate (POOL_makePoolId(processorId, SAMPLE_POOL_ID),
-//	               pool_notify_DataBuf,
-//	               pool_notify_BufferSize);
+	POOL_invalidate (POOL_makePoolId(processorId, SAMPLE_POOL_ID),
+	               pool_notify_DataBuf,
+	               pool_notify_BufferSize);
 
    #endif
    return status;
@@ -525,7 +532,9 @@ NORMAL_API int pool_notify_Main (IN Char8 * dspExecutable, IN Char8 * strBufferS
                          "pool_notify application\n") ;
     }
 
+	#ifdef DEBUG
     printf ("====================================================\n") ;
+    #endif
     return ret;
 }
 

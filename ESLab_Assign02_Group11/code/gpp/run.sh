@@ -1,8 +1,16 @@
 #!/bin/bash
-/home/root/powercycle.sh > /dev/null
+
+size=$(( 16 ))
+maxsize=5392
+#$(( 1024 + 16))
 
 MYDIR=$(pwd)
-"$MYDIR/meanshift.gpp" "$MYDIR/meanshift.dsp"
 
+/home/root/powercycle.sh > /dev/null
+while [ $size -le $maxsize ]
+do
+    "$MYDIR/meanshift.gpp" "$MYDIR/meanshift.dsp" $size
+    size=$(( $size + 32 ))
+done
 /home/root/powercycle.sh > /dev/null
 
