@@ -1,16 +1,15 @@
 #include "meanshift.h"
 #include "Timer.h"
 #include <iostream>
-
 #ifndef ARMCC
 #include "markers.h"
 #endif
 
 int main(int argc, char ** argv)
 {
-    Timer totalTimer("Total Time");
-    Timer readTimer("Reading Time");
-    Timer writeTimer("Writing Time");
+    Timer totalTimer("Total Time   ");
+    Timer readTimer("Reading Time ");
+    Timer writeTimer("Writing Time ");
     Timer trackTimer("Tracking Time");
 
     cv::VideoCapture frame_capture;
@@ -30,7 +29,7 @@ int main(int argc, char ** argv)
     cv::Rect rect(228,367,86,58);
     cv::Mat frame;
     frame_capture.read(frame);
-    
+
     MeanShift ms; // creat meanshift obj
     ms.Init_target_frame(frame,rect); // init the meanshift
 
@@ -62,7 +61,7 @@ int main(int argc, char ** argv)
         #ifndef ARMCC
         // MCPROF_STOP();
         #endif
-        
+
         // mark the tracked object in frame
         writeTimer.Start();
         cv::rectangle(frame,ms_rect,cv::Scalar(0,0,255),3);
@@ -94,4 +93,3 @@ int main(int argc, char ** argv)
 
     return 0;
 }
-
