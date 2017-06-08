@@ -110,10 +110,11 @@ int sum_dsp()
 
 Int Task_execute (Task_TransferInfo * info)
 {
-    int sum;
+    static int count=0;
 
+    for(;;){
     //wait for semaphore
-	SEM_pend (&(info->notifySemObj), SYS_FOREVER);
+    SEM_pend (&(info->notifySemObj), SYS_FOREVER);
 
 	//invalidate cache
     BCACHE_inv ((Ptr)buf, length, TRUE) ;
@@ -122,10 +123,10 @@ Int Task_execute (Task_TransferInfo * info)
     //sum = sum_dsp();
     
 	//notify that we are done
-    NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)0);
+    NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)++count);
 	//notify the result
-    //NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)sum);
-
+    //NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)++count);
+	}
     return SYS_OK;
 }
 
@@ -162,10 +163,13 @@ static Void Task_notify (Uint32 eventNo, Ptr arg, Ptr info)
     count++;
     if (count==1) {
         buf =(unsigned char*)info ;
+	
     }
-    if (count==2) {
+    if (count>=2) {
         length = (int)info;
     }
-
     SEM_post(&(mpcsInfo->notifySemObj));
+
+
+    
 }
