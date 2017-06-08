@@ -160,6 +160,7 @@ NORMAL_API DSP_STATUS pool_notify_Create (	IN Char8 * dspExecutable,
     SMAPOOL_Attrs   poolAttrs ;
     Char8 *         args [NUM_ARGS] ;
 
+
 	#ifdef DEBUG
     printf ("Entered pool_notify_Create ()\n") ;
 	#endif
@@ -384,6 +385,7 @@ NORMAL_API DSP_STATUS pool_notify_Execute (IN Uint32 numIterations, Uint8 proces
 	}
 
 	for (i=0;i<numIterations;i++){
+		printf ("Entered iteration %d\n",i) ;
 		start = get_usec();
 		//TotalTimer starts here
 		memcpy(pool_notify_DataBuf,dummy_msg,pool_notify_BufferSize);
@@ -398,10 +400,9 @@ NORMAL_API DSP_STATUS pool_notify_Execute (IN Uint32 numIterations, Uint8 proces
 				 (Void *) pool_notify_DataBuf,
 				 AddrType_Usr) ;
 		NOTIFY_notify (processorId,pool_notify_IPS_ID,pool_notify_IPS_EVENTNO,1);
-
 		sem_wait(&sem);
 		//Timer should be stopped here
-		printf("Response time iteration %d:  %lld us.\n", i,get_usec()-start);
+
 	}
 
     return status ;
@@ -508,6 +509,7 @@ NORMAL_API Void pool_notify_Main (IN Char8 * dspExecutable, IN Char8 * strBuffer
 {
     DSP_STATUS status       = DSP_SOK ;
     Uint8      processorId  = 0 ;
+    pool_notify_NumIterations = 100;
 
 	#ifdef DEBUG
     printf ("========== Sample Application : pool_notify ==========\n") ;
@@ -570,18 +572,21 @@ NORMAL_API Void pool_notify_Main (IN Char8 * dspExecutable, IN Char8 * strBuffer
  */
 STATIC Void pool_notify_Notify (Uint32 eventNo, Pvoid arg, Pvoid info)
 {
+    static int count;
+    
 	#ifdef DEBUG
-    printf("Notification %8d \n", (int)info);
+    printf("Notification %8d \nCount: %d\n", (int)info,count);
 	#endif
     /* Post the semaphore. */
-    if((int)info==0) 
+    if((int)info==count) 
 	{
         sem_post(&sem);
     } 
     else 
 	{
-        printf(" Result on DSP is %d \n", (int)info);
+        printf(" Mismatch in notifications!\n");
     }
+    count++;
 }
 
 
