@@ -22,80 +22,71 @@ int main(int argc, char ** argv)
         std::cout <<"Usage:  " << argv[0] << " meanshift.dsp" << std::endl;
         return -1;
     }
-    int vectorSize = 65536;
+    Char8 * strBufferSize = "4096";
     if (argc >= 3)
     {
-        vectorSize = atoi(argv[2]);
+        strBufferSize = argv[2];
     }
+    int vectorSize = atoi(strBufferSize) / sizeof(int);
 
 #ifdef USE_DSP
     // Set up DSP
     Char8 * dspExecutable = argv[1];
-    Char8 * strBufferSize = "128";
     if (!pool_notify_Main(dspExecutable, strBufferSize)) {
         std::cout << "Error setting up DSP" << std::endl;
         return -1;
     }
 #endif
 
-    Timer intmult("int mult");
-    Timer floatmult("float mult");
-    Timer intdiv("int div");
-    Timer floatdiv("float div");
 
     long tStart;
-    long tIntMult, tIntDiv, tFloatMult, tFloatDiv;
+    long tCopy, tWriteback, tNotify, tRead;
 	Timer_Init();
 
     int * buf = pool_notify_GetBuf();
-    buf[0] = vectorSize;
+    int * data = (int *) malloc(vectorSize * sizeof(int));
+
+    // Generate data
+    for(int i=0; i<vectorSize; i++)
+    {
+        data[i] = rand();
+    }
+
+    // Read back stuff, to ensure cache voodoo
+    // This simulates the pool being in the cache already
+    memcpy(buf + 1, data, (vectorSize - 1) * sizeof(int));
+
+    // Copy to shared memory
+    tStart = HiResTime();
+    memcpy(buf, data, vectorSize * sizeof(int));
+    tCopy = HiResTime() - tStart;
+
+    // Flush cache
+    tStart = HiResTime();
+    pool_notify_Writeback();
+    tWriteback = HiResTime() - tStart;
+
+    // Send notification
+    tStart = HiResTime();
     pool_notify_Execute();
     pool_notify_Result();
+    tNotify = HiResTime() - tStart;
 
-    pool_notify_Result();
+    // Read back
     tStart = HiResTime();
-//    intmult.Start();
-    pool_notify_Result();
-    tIntMult = HiResTime() - tStart;
-    intmult.Stop();
+    pool_notify_Invalidate();
+    memcpy(data, buf, vectorSize * sizeof(int));
+    tRead = HiResTime() - tStart;
 
-    pool_notify_Result();
-    tStart = HiResTime();
-//    intdiv.Start();
-    pool_notify_Result();
-    tIntDiv = HiResTime() - tStart;
-    intdiv.Stop();
-
-    pool_notify_Result();
-    tStart = HiResTime();
-//    floatmult.Start();
-    pool_notify_Result();
-    tFloatMult = HiResTime() - tStart;
-    floatmult.Stop();
-
-    pool_notify_Result();
-    tStart = HiResTime();
-//    floatdiv.Start();
-    pool_notify_Result();
-    tFloatDiv = HiResTime() - tStart;
-    floatdiv.Stop();
 
 
     Timer_DeInit();
 
-/*    std::cout.precision(3);
-    std::cout << std::scientific;
-    std::cout << buf[1]
-            << "," << intmult.GetTime()
-            << "," << intdiv.GetTime()
-            << "," << floatmult.GetTime()
-            << "," << floatdiv.GetTime()
-            << "\n";*/
-    std::cout << buf[1]
-            << "," << tIntMult
-            << "," << tIntDiv
-            << "," << tFloatMult
-            << "," << tFloatDiv
+    std::cout << buf[0]
+            << "," << tCopy
+            << "," << tWriteback
+            << "," << tNotify
+            << "," << tRead
             << "\n";
 
 #ifdef USE_DSP

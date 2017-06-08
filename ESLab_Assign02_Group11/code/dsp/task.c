@@ -123,153 +123,33 @@ Int Task_execute (Task_TransferInfo * info)
 	BCACHE_inv ((Ptr)buf, length, TRUE) ;
 
     {
-    int repeat = 1000;
-	int vectSize = ((int *) buf)[0];
-	int n, p;
-
-	int * restrict vecti1 = MEM_calloc (DSPLINK_SEGID,
-                               sizeof (int) * vectSize,
-                               0);
-	int * restrict vecti2 = MEM_calloc (DSPLINK_SEGID,
-                               sizeof (int) * vectSize,
-                               0);
-	int * restrict vecti3 = MEM_calloc (DSPLINK_SEGID,
-                               sizeof (int) * vectSize,
+	int * localdata = MEM_calloc (DSPLINK_SEGID,
+                               length,
                                0);
 
-   	float * restrict vectf1 = MEM_calloc (DSPLINK_SEGID,
-                               sizeof (float) * vectSize,
-                               0);
-   	float * restrict vectf2 = MEM_calloc (DSPLINK_SEGID,
-                               sizeof (float) * vectSize,
-                               0);
-   	float * restrict vectf3 = MEM_calloc (DSPLINK_SEGID,
-                               sizeof (float) * vectSize,
-                               0);
-
-
-
-    if (vecti1 == NULL || vecti2 == NULL || vecti3 == NULL
-        || vectf1 == NULL || vectf2 == NULL || vectf3 == NULL)
+    if (localdata == NULL)
     {
-    	((int *) (buf+4))[0] = -1;
+    	((int *) (buf))[0] = -1;
 	
     	//write back to main memory
     	BCACHE_wb ((Ptr)buf, 128, TRUE);
 
         NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)0);
 
-        NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)0);
-        NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)0);
-
-        NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)0);
-        NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)0);
-
-        NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)0);
-        NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)0);
-
-        NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)0);
-        NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)0);
-
     } else {
-    	((int *) (buf+4))[0] = vectSize;
-	
+        memcpy(localdata, buf, length);
+        ((int *) (buf))[0] = length;
+        memcpy(buf + 4, localdata, length - 4);
+
 	    //write back to main memory
     	BCACHE_wb ((Ptr)buf, 128, TRUE);
 
         NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)0);
-
-	    for (n=0; n<vectSize; n++) {
-		    vecti1[n] = rand() % 100 + 1;
-		    vecti2[n] = rand() % 100 + 1;
-		    vecti3[n] = 0;
-	    }
-	    for (n=0; n<vectSize; n++) {
-		    vecti3[n] = vecti1[n] * vecti2[n];
-	    }
-	    // Notify of mult int
-	    NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)0);
-	    #pragma MUST_ITERATE(16,4096,16)
-	    for (p=0; p<repeat; p++) {
-	    for (n=0; n<vectSize; n++) {
-		    vecti3[n] = vecti1[n] * vecti2[n];
-	    }
-	    }
-	    NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)0);
-
-
-	    for (n=0; n<vectSize; n++) {
-		    vecti1[n] = rand() % 100 + 1;
-		    vecti2[n] = rand() % 100 + 1;
-		    vecti3[n] = 0;
-	    }
-	    for (n=0; n<vectSize; n++) {
-		    vecti3[n] = vecti1[n] / vecti2[n];
-	    }
-	    // Notify of div int
-	    NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)0);
-	    for (p=0; p<repeat; p++) {
-	    for (n=0; n<vectSize; n++) {
-		    vecti3[n] = vecti1[n] / vecti2[n];
-	    }
-	    }
-	    NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)0);
-
-
-	    for (n=0; n<vectSize; n++) {
-		    vectf1[n] = rand() / ((RAND_MAX/100.0f)+1);
-		    vectf2[n] = rand() / ((RAND_MAX/100.0f)+1);
-		    vectf3[n] = 0;
-	    }
-	    for (n=0; n<vectSize; n++) {
-		    vectf3[n] = vectf1[n] * vectf2[n];
-	    }
-	    // Notify of mult float
-	    NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)0);
-	    for (p=0; p<repeat; p++) {
-	    for (n=0; n<vectSize; n++) {
-		    vectf3[n] = vectf1[n] * vectf2[n];
-	    }
-	    }
-	    NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)0);
-
-
-	    for (n=0; n<vectSize; n++) {
-		    vectf1[n] = rand() / ((RAND_MAX/100.0f)+1);
-		    vectf2[n] = rand() / ((RAND_MAX/100.0f)+1);
-		    vectf3[n] = 0;
-	    }
-	    for (n=0; n<vectSize; n++) {
-		    vectf3[n] = vectf1[n] / vectf2[n];
-	    }
-	    // Notify of div float
-	    NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)0);
-	    for (p=0; p<repeat; p++) {
-	    for (n=0; n<vectSize; n++) {
-//		    vectf3[n] = vectf1[n] / vectf2[n];
-	    }
-	    }
-	    NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)0);
     }
 
     MEM_free (DSPLINK_SEGID,
-              vecti1,
-              sizeof (int) * vectSize);
-    MEM_free (DSPLINK_SEGID,
-              vecti2,
-              sizeof (int) * vectSize);
-    MEM_free (DSPLINK_SEGID,
-              vecti3,
-              sizeof (int) * vectSize);
-    MEM_free (DSPLINK_SEGID,
-              vectf1,
-              sizeof (float) * vectSize);
-    MEM_free (DSPLINK_SEGID,
-              vectf2,
-              sizeof (float) * vectSize);
-    MEM_free (DSPLINK_SEGID,
-              vectf3,
-              sizeof (float) * vectSize);
+              localdata,
+              length);
     }
     return SYS_OK;
 }

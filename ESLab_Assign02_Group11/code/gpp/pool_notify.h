@@ -77,11 +77,19 @@ unsigned int pool_notify_GetSize();
 
 NORMAL_API
 DSP_STATUS
+pool_notify_Writeback () ;
+
+NORMAL_API
+DSP_STATUS
 pool_notify_Execute () ;
 
 NORMAL_API
 DSP_STATUS
 pool_notify_Result () ;
+
+NORMAL_API
+DSP_STATUS
+pool_notify_Invalidate () ;
 
 /** ============================================================================
  *  @func   pool_notify_Delete

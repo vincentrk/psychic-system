@@ -341,6 +341,22 @@ unsigned int pool_notify_GetSize()
 {
 	return pool_notify_BufferSize;
 }
+NORMAL_API DSP_STATUS pool_notify_Writeback ()
+{
+	Uint8 processorId = 0;
+	DSP_STATUS  status    = DSP_SOK ;
+
+	#if defined(DSP)
+
+	// Write to main memory
+	POOL_writeback (POOL_makePoolId(processorId, SAMPLE_POOL_ID),
+	               pool_notify_DataBuf,
+	               pool_notify_BufferSize);
+
+	#endif
+
+	return status ;
+}
 NORMAL_API DSP_STATUS pool_notify_Execute ()
 {
 	Uint8 processorId = 0;
@@ -351,11 +367,6 @@ NORMAL_API DSP_STATUS pool_notify_Execute ()
 	#endif
 
 	#if defined(DSP)
-
-	// Write to main memory
-	POOL_writeback (POOL_makePoolId(processorId, SAMPLE_POOL_ID),
-	               pool_notify_DataBuf,
-	               pool_notify_BufferSize);
 
 	// Notify DSP
 	NOTIFY_notify (processorId,pool_notify_IPS_ID,pool_notify_IPS_EVENTNO,1);
@@ -374,6 +385,16 @@ NORMAL_API DSP_STATUS pool_notify_Result ()
 	// Wait for signal from DSP
 	while (sem_trywait(&sem) != 0) {}
 //	sem_wait(&sem);
+
+   #endif
+   return status;
+}
+NORMAL_API DSP_STATUS pool_notify_Invalidate ()
+{
+	Uint8 processorId = 0;
+	DSP_STATUS  status    = DSP_SOK ;
+
+	#if defined(DSP)
 
 	// Invalidate cache
 	POOL_invalidate (POOL_makePoolId(processorId, SAMPLE_POOL_ID),
