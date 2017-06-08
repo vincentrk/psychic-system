@@ -141,8 +141,8 @@ Int Task_execute (Task_TransferInfo * info)
         ((int *) (buf))[0] = length;
         memcpy(buf + 4, localdata, length - 4);
 
-	    //write back to main memory
-    	BCACHE_wb ((Ptr)buf, 128, TRUE);
+        //write back to main memory
+        BCACHE_wb ((Ptr)buf, length, TRUE);
 
         NOTIFY_notify(ID_GPP,MPCSXFER_IPS_ID,MPCSXFER_IPS_EVENTNO,(Uint32)0);
     }
