@@ -1,12 +1,15 @@
 #ifndef MEANSHIFT_H
 #define MEANSHIFT_H
 #include <iostream>
+#include <arm_neon.h>
 #include <math.h>
 #include "opencv2/core/core.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
 
 #define PI 3.1415926
+
+
 class MeanShift
 {
  private:
@@ -20,6 +23,7 @@ class MeanShift
         int num_bins;
         int piexl_range;
         int MaxIter;
+        int vectorCells;
     }cfg;
 
 public:

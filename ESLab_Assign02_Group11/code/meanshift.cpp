@@ -34,6 +34,7 @@ MeanShift::MeanShift()
 {
     cfg.MaxIter = 8;
     cfg.num_bins = 16;
+    cfg.vectorCells = cfg.num_bins/4;
     cfg.piexl_range = 256;
     bin_width = cfg.piexl_range / cfg.num_bins;
     bin_width_pow = 0;
@@ -104,6 +105,14 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
 {
 //    std::cerr << "entering pdf_representation()\n";
     cv::Mat pdf_model(3,cfg.num_bins,CV_32S,cv::Scalar(init));
+  //   int plane_a[16];
+// 	int plane_b[16];
+// 	int plane_c[16];
+//
+// 	for(int j=0; j<16;j++)
+// 	{
+// 		plane_a[j] = plane_b[j] = plane_c[j] = 0;
+// 	}
 
     int height = rect.height;
     int width = rect.width;
@@ -144,6 +153,13 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
         }
         row_index++;
     }
+
+   //  for (int j=0;j<cfg.vectorCells;j++)
+// 	{
+// 		pdf_model.at[j][0] = vld1q_s32(plane_a + (j*4));
+// 		pdf_model.at[j][1] = vld1q_s32(plane_b + (j*4));
+// 		pdf_model.at[j][2] = vld1q_s32(plane_c + (j*4));
+// 	}
 //    std::cerr << "leaving pdf_representation()\n";
     return pdf_model;
 }
@@ -160,6 +176,8 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         std::cerr << "Error: frame is not continuous\n";
         return next_rect;
     }
+    int32x4_t preWeights;
+    preWeights = vsetq_lane_s32(1,preWeights,2);
 
     for(int iter=0;iter<cfg.MaxIter;iter++)
     {
@@ -202,6 +220,8 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         int delta_x = 0;
         int sum_wij = 0;
         int delta_y = 0;
+        int32x4_t newDeltas = vdupq_n_s32(0);
+
         int centre = ((height-1)/2); // Half pixel error
 
         int * plane_a = target_ratio.ptr<int>(0);
@@ -211,13 +231,15 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         int row_index = target_Region.y;
         for(int i=0;i<height;i++)
         {
-            int norm_i = (i-centre);
+            int32_t norm_i = (i-centre);
+        	preWeights = vsetq_lane_s32(norm_i,preWeights,1);
+
             int norm_i_sqr = norm_i*norm_i;
             const cv::Vec3b * pixels = next_frame.ptr<cv::Vec3b>(row_index) + target_Region.x;
             for(int j=0;j<width;j++)
             {
 //               std::cerr << "loop\n";
-                int norm_j = (j-centre);
+                int32_t norm_j = (j-centre);
                 if (norm_i_sqr + norm_j * norm_j <= centre * centre) {
                     // calculate element of weight matrix (CalWeight)
                     cv::Vec3b bin_value;
@@ -233,12 +255,16 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
 //                    if (weight == 0) {
 //                        std::cerr << "ZERO: " << i << "," << j << " bin: " << ((int)bin_value[0]) << " " << ((int)bin_value[1]) << " " << ((int)bin_value[2]) << "\n";
 //                    }
-                    delta_x += (norm_j * weight);
-                    delta_y += (norm_i * weight);
-//                    if (sum_wij >= INT_MAX - weight) {
-//                        std::cerr << "overflow on sum_wij\n";
-//                    }
-                    sum_wij += (weight);
+
+					preWeights = vsetq_lane_s32(norm_j,preWeights,0);
+
+					newDeltas = vaddq_s32(vmulq_s32(vdupq_n_s32(weight),preWeights),newDeltas);
+                    // delta_x += (norm_j * weight);
+//                     delta_y += (norm_i * weight);
+// //                    if (sum_wij >= INT_MAX - weight) {
+// //                        std::cerr << "overflow on sum_wij\n";
+// //                    }
+//                     sum_wij += (weight);
                 }
             }
             row_index++;
@@ -250,6 +276,10 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
         next_rect.y = target_Region.y;
         next_rect.width = target_Region.width;
         next_rect.height = target_Region.height;
+
+		vst1q_lane_s32(& delta_x,newDeltas,0);
+		vst1q_lane_s32(& delta_y,newDeltas,1);
+		vst1q_lane_s32(& sum_wij,newDeltas,2);
 
         if (sum_wij != 0) {
             next_rect.x += ((delta_x/sum_wij));
