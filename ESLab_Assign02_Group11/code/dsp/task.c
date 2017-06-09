@@ -170,7 +170,7 @@ Int Task_execute (Task_TransferInfo * info)
 			    memcpy(
 				    meanshift_info.target_model,
 				    ((int *) buf) + 7,
-				    meanshift_info.bins_num * sizeof(int));
+				    meanshift_info.bins_num * CHANNEL_COUNT * sizeof(int));
 
 			    ((int *) buf)[0] = MEANSHIFT_MSG_SUCCESS;
 		    } else {
