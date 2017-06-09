@@ -9,9 +9,14 @@
 
 #ifndef DSP_COMPILER
 #include <iostream>
+#ifdef TIMEDETAIL
+    #define HIRESTIMING
+#endif
 #endif
 
-#ifdef TIMEDETAIL
+
+
+#ifdef HIRESTIMING
 long HiResTime(void);
 #endif
 
@@ -37,7 +42,7 @@ void pdf_representation_inner(
     int kern_h = height / 2;
     int kern_w = width / 2;
 
-#ifdef TIMEDETAIL
+#ifdef HIRESTIMING
     long tTemp = HiResTime();
 #endif
     for(i=0; i < height; i++) {
@@ -58,7 +63,7 @@ void pdf_representation_inner(
         }
         pixels += pixel_skip;
     }
-#ifdef TIMEDETAIL
+#ifdef HIRESTIMING
     std::cout << "pdf_rep: " << (HiResTime()-tTemp) << "\n";
 #endif
 }
@@ -89,7 +94,7 @@ void track_iter_inner(
     width = MIN(height, width); // Loop is limited to a circle with a diameter of height
     pixel_skip = (pixel_stride - width) * CHANNEL_COUNT;
 
-#ifdef TIMEDETAIL
+#ifdef HIRESTIMING
     long tTemp = HiResTime();
 #endif
     for(i=0; i < height; i++) {
@@ -128,7 +133,7 @@ void track_iter_inner(
         }
         pixels += pixel_skip;
     }
-#ifdef TIMEDETAIL
+#ifdef HIRESTIMING
     std::cout << "iter_in: " << (HiResTime()-tTemp) << "\n";
 #endif
 
