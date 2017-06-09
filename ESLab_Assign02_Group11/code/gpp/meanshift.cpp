@@ -58,8 +58,12 @@ void  MeanShift::Init_target_frame(const cv::Mat &frame,const cv::Rect &rect)
 {
     target_Region = rect;
     float kernel_sum = Epanechnikov_kernel(kernel, rect.height, rect.width);
+#ifdef FIXEDPOINT
     kernel *= INT_MAX / kernel_sum; // pre-scale kernel
     kernel.convertTo(kernel, CV_32S);
+#else
+    kernel *= 1/kernel_sum;
+#endif
     target_model = pdf_representation(frame,target_Region);
 
 #ifdef DSP
@@ -152,7 +156,11 @@ float  MeanShift::Epanechnikov_kernel(cv::Mat &kernel, int h, int w)
 
 cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect)
 {
+#ifdef FIXEDPOINT
     cv::Mat pdf_model(CHANNEL_COUNT,cfg.num_bins,CV_32S,cv::Scalar(0));
+#else
+    cv::Mat pdf_model(CHANNEL_COUNT,cfg.num_bins,CV_32F,cv::Scalar(1e-10));
+#endif
 
 #ifndef OPTIMAL
     if (!kernel.isContinuous()) {
@@ -166,12 +174,12 @@ cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect
     pdf_representation_inner(
         rect.height,
         rect.width,
-        pdf_model.ptr<int>(0),
-        pdf_model.ptr<int>(1),
-        pdf_model.ptr<int>(2),
+        pdf_model.ptr<PDF_T>(0),
+        pdf_model.ptr<PDF_T>(1),
+        pdf_model.ptr<PDF_T>(2),
         (unsigned char *) (frame.ptr<cv::Vec3b>(rect.y) + rect.x),
         frame.cols,
-        kernel.ptr<int>(0),
+        kernel.ptr<PDF_T>(0),
         kernel.cols,
         bin_width_pow);
 
@@ -241,9 +249,9 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
 		(unsigned char *) (next_frame.ptr<cv::Vec3b>(offset_y) + offset_x),
         next_frame.cols,
 	#endif
-        kernel.ptr<int>(0),
+        kernel.ptr<PDF_T>(0),
         kernel.cols,
-        target_model.ptr<int>(0),
+        target_model.ptr<PDF_T>(0),
         bin_width_pow,
         cfg.num_bins,
         cfg.MaxIter,

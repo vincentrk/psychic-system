@@ -131,7 +131,8 @@ DEFS := 	-DHOSTED_IO 				\
 		-dPHYINTERFACE=SHMEM_INTERFACE          \
 		-DDSP_SWI_MODE                          \
 		-DARCH_OMAP                             \
-		-DDSP_COMPILER
+		-DDSP_COMPILER                          \
+		-DFIXEDPOINT                            \
 
 
 

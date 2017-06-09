@@ -14,25 +14,23 @@
 #endif
 #endif
 
-
-
 #ifdef HIRESTIMING
 long HiResTime(void);
 #endif
 
-
 #define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
+
 
 void pdf_representation_inner(
     int height,
     int width,
-    int * RESTRICT pdf_a,
-    int * RESTRICT pdf_b,
-    int * RESTRICT pdf_c,
+    PDF_T * RESTRICT pdf_a,
+    PDF_T * RESTRICT pdf_b,
+    PDF_T * RESTRICT pdf_c,
     const unsigned char * RESTRICT pixels,
     int pixel_stride,
-    const int * RESTRICT kernel,
+    const PDF_T * RESTRICT kernel,
     int kernel_row_size,
     int bin_width_pow
 )
@@ -48,8 +46,8 @@ void pdf_representation_inner(
     for(i=0; i < height; i++) {
         for(j=0; j < width; j++) {
             unsigned char bin_value_a, bin_value_b, bin_value_c;
-            int val_a, val_b, val_c;
-            int kernel_element;
+            PDF_T val_a, val_b, val_c;
+            PDF_T kernel_element;
             bin_value_a = (*pixels++) >> bin_width_pow;
             bin_value_b = (*pixels++) >> bin_width_pow;
             bin_value_c = (*pixels++) >> bin_width_pow;
@@ -71,9 +69,9 @@ void pdf_representation_inner(
 void track_iter_inner(
     const int height,
     int width,
-    const int * RESTRICT ratio_a,
-    const int * RESTRICT ratio_b,
-    const int * RESTRICT ratio_c,
+    const PDF_T * RESTRICT ratio_a,
+    const PDF_T * RESTRICT ratio_b,
+    const PDF_T * RESTRICT ratio_c,
     const unsigned char * RESTRICT pixels,
     const int pixel_stride,
     const int bin_width_pow,
@@ -82,14 +80,14 @@ void track_iter_inner(
 ) {
     int i, j;
     int pixel_skip;
-    int delta_x = 0;
-    int delta_y = 0;
-    int sum_wij = 0;
+    PDF_T delta_x = 0;
+    PDF_T delta_y = 0;
+    PDF_T sum_wij = 0;
     #ifdef USE_NEON
     int32x4_t preWeights = vsetq_lane_s32(1,preWeights,2);
     int32x4_t newDeltas = vdupq_n_s32(0);
     #endif //USE_NEON
-    int centre = ((height-1)/2); // Half pixel error
+    PDF_T centre = ((height-1)/(PDF_T)2); // Half pixel error
 
     width = MIN(height, width); // Loop is limited to a circle with a diameter of height
     pixel_skip = (pixel_stride - width) * CHANNEL_COUNT;
@@ -97,21 +95,22 @@ void track_iter_inner(
 #ifdef HIRESTIMING
     long tTemp = HiResTime();
 #endif
+
     for(i=0; i < height; i++) {
-        int norm_i = (i - centre);
+        PDF_T norm_i = (i - centre);
         #ifdef USE_NEON
         preWeights = vsetq_lane_s32(norm_i,preWeights,1);
         #endif //USE_NEON
-        int norm_i_sqr = norm_i * norm_i;
+        PDF_T norm_i_sqr = norm_i * norm_i;
         for(j=0; j < width; j++) {
-            int norm_j = (j-centre);
+            PDF_T norm_j = (j-centre);
             if (norm_i_sqr + norm_j * norm_j <= centre * centre) {
                 // calculate element of weight matrix (CalWeight)
                 #ifdef USE_NEON
                 preWeights = vsetq_lane_s32(norm_j,preWeights,0);
                 #endif //USE_NEON
                 unsigned char bin_value_a, bin_value_b, bin_value_c;
-                int weight;
+                PDF_T weight;
                 bin_value_a = (*(pixels + 0)) >> bin_width_pow;
                 bin_value_b = (*(pixels + 1)) >> bin_width_pow;
                 bin_value_c = (*(pixels + 2)) >> bin_width_pow;
@@ -151,30 +150,43 @@ void track_inner(
     const int width,
     const unsigned char * RESTRICT pixels,
     const int pixel_stride,
-    const int * RESTRICT kernel,
+    const PDF_T * RESTRICT kernel,
     const int kernel_row_size,
-    const int * RESTRICT target_model,
+    const PDF_T * RESTRICT target_model,
     const int bin_width_pow,
     const int bins_num,
     const int iter_max,
     int * rect_y,
     int * rect_x
 ) {
-    const int pdf_size = CHANNEL_COUNT * bins_num * sizeof(int);
-    int * target_candidate = (int *) malloc(pdf_size);
-    int * target_ratio = (int *) malloc(pdf_size);
+    const int pdf_size = CHANNEL_COUNT * bins_num * sizeof(PDF_T);
+    PDF_T * target_candidate = (PDF_T *) malloc(pdf_size);
+    PDF_T * target_ratio = (PDF_T *) malloc(pdf_size);
 
     int iter;
     for(iter=0; iter < iter_max; iter++) {
         int k;
         int index;
+#ifdef FIXEDPOINT
         float max_ratio[CHANNEL_COUNT] = {0.0f};
         float ratio_scale;
+#endif
 
         int delta_y = 0;
         int delta_x = 0;
 
+#ifdef FIXEDPOINT
         memset(target_candidate, 0, pdf_size);
+#else
+        index = 0;
+        for (k=0; k<CHANNEL_COUNT; k++) {
+            int b;
+            for (b=0; b<bins_num; b++) {
+                target_candidate[index] = 1e-10;
+                index++;
+            }
+        }
+#endif
         pdf_representation_inner(
             height,
             width,
@@ -192,6 +204,7 @@ void track_inner(
         for (k=0; k<CHANNEL_COUNT; k++) {
             int b;
             for (b=0; b<bins_num; b++) {
+#ifdef FIXEDPOINT
                 if (target_candidate[index] == 0) {
                     target_ratio[index] = 0;
                 } else {
@@ -200,10 +213,16 @@ void track_inner(
                         / target_candidate[index]);
                     max_ratio[k] = MAX(max_ratio[k], ((float *) target_ratio)[index]);
                 }
+#else
+                target_ratio[index] = sqrt(
+                          target_model[index]
+                        / target_candidate[index]);
+#endif
                 index++;
             }
         }
 
+#ifdef FIXEDPOINT
         // Scale the ratio array and convert to int
         ratio_scale = pow(
             (INT_MAX * 2.0f * 4.0f) / (height * height * height * max_ratio[0] * max_ratio[1] * max_ratio[2]),
@@ -217,6 +236,7 @@ void track_inner(
                 index++;
             }
         }
+#endif
 
         track_iter_inner(
             height,

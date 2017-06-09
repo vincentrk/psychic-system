@@ -133,7 +133,10 @@ int main(int argc, char ** argv)
 
     } // Destroy writer to flush output to file
     #ifdef ARMCC
-    std::cout << "de8d2d93eb1b27101aa13dcd0be76d32  is expected...\n";
+    #ifdef FIXEDPOINT
+    std::cout << "de8d2d93eb1b27101aa13dcd0be76d32  is expected (for fixed point)...\n";
+    #else
+    std::cout << "4bf41e5572f56bfedb3182781e24d4ac  is expected (original code result)...\n";
     #endif
     system("md5sum tracking_result.avi");
 

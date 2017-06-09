@@ -13,15 +13,21 @@
     #define RESTRICT __restrict
 #endif
 
+#ifdef FIXEDPOINT
+    #define PDF_T int
+#else
+    #define PDF_T float
+#endif
+
 void pdf_representation_inner(
     int height,
     int width,
-    int * RESTRICT pdf_a,
-    int * RESTRICT pdf_b,
-    int * RESTRICT pdf_c,
+    PDF_T * RESTRICT pdf_a,
+    PDF_T * RESTRICT pdf_b,
+    PDF_T * RESTRICT pdf_c,
     const unsigned char * RESTRICT pixels,
     int pixel_stride,
-    const int * RESTRICT kernel,
+    const PDF_T * RESTRICT kernel,
     int kernel_row_size,
     int bin_width_pow
 );
@@ -29,9 +35,9 @@ void pdf_representation_inner(
 void track_iter_inner(
     const int height,
     int width,
-    const int * RESTRICT ratio_a,
-    const int * RESTRICT ratio_b,
-    const int * RESTRICT ratio_c,
+    const PDF_T * RESTRICT ratio_a,
+    const PDF_T * RESTRICT ratio_b,
+    const PDF_T * RESTRICT ratio_c,
     const unsigned char * RESTRICT pixels,
     const int pixel_stride,
     const int bin_width_pow,
@@ -44,9 +50,9 @@ void track_inner(
     const int width,
     const unsigned char * RESTRICT pixels,
     const int pixel_stride,
-    const int * RESTRICT kernel,
+    const PDF_T * RESTRICT kernel,
     const int kernel_row_size,
-    const int * RESTRICT target_model,
+    const PDF_T * RESTRICT target_model,
     const int bin_width_pow,
     const int bins_num,
     const int iter_max,
