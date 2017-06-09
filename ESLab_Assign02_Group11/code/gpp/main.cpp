@@ -138,6 +138,7 @@ int main(int argc, char ** argv)
     #else
     std::cout << "4bf41e5572f56bfedb3182781e24d4ac  is expected (original code result)...\n";
     #endif
+    #endif
     system("md5sum tracking_result.avi");
 
     return 0;
