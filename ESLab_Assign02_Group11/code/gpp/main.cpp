@@ -1,7 +1,9 @@
+#include <iostream>
+
 #include "meanshift.h"
+#include "HiResTimer.h"
 #include "Timer.h"
 #include "pool_notify.h"
-#include <iostream>
 
 #ifndef ARMCC
 #include "markers.h"
@@ -59,6 +61,8 @@ int main(int argc, char ** argv)
     MeanShift ms; // creat meanshift obj
     ms.Init_target_frame(frame,rect); // init the meanshift
 
+	unsigned long long tTemp, tRead = 0, tTrack = 0;
+
     {
     int codec = CV_FOURCC('F', 'L', 'V', '1');
     cv::VideoWriter writer("tracking_result.avi", codec, 20, cv::Size(frame.cols,frame.rows));
@@ -71,9 +75,15 @@ int main(int argc, char ** argv)
     int fcount;
     for(fcount=0; fcount<TotalFrames; ++fcount)
     {
+
+
         // read a frame
         readTimer.Start();
+        Timer_Init();
+        tTemp = HiResTime();
         int status = frame_capture.read(frame);
+        tRead += HiResTime() - tTemp;
+        Timer_DeInit();
         if( 0 == status ) break;
         readTimer.Pause();
 
@@ -82,7 +92,11 @@ int main(int argc, char ** argv)
         // MCPROF_START();
         #endif
         trackTimer.Start();
+        Timer_Init();
+        tTemp = HiResTime();
         cv::Rect ms_rect =  ms.track(frame);
+        tTrack += HiResTime() - tTemp;
+        Timer_DeInit();
         trackTimer.Pause();
         #ifndef ARMCC
         // MCPROF_STOP();
@@ -109,8 +123,10 @@ int main(int argc, char ** argv)
 
     totalTimer.Print();
     readTimer.Print();
+    std:: cout << "Reading Time : " << (tRead / 720) << " us\n";
     writeTimer.Print();
     trackTimer.Print();
+    std:: cout << "Tracking Time : " << (tTrack / 720) << " us\n";
 
     std::cout << "Processed " << fcount << " frames" << std::endl;
     std::cout << "Time: " << totalTimer.GetTime() <<" sec\nFPS : " << fcount/totalTimer.GetTime() << std::endl;
