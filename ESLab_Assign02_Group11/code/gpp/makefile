@@ -111,6 +111,7 @@ DEFS :=        -DOS_LINUX            \
                -DARMCC               \
                -DOPTIMAL             \
                -DUSE_NEON            \
+#               -DTIMEDETAIL          \
 #               -DDSP_MIMIC           \
 #               -DDSP                 \
 

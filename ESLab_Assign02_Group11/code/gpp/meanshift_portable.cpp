@@ -11,6 +11,10 @@
 #include <iostream>
 #endif
 
+#ifdef TIMEDETAIL
+long HiResTime(void);
+#endif
+
 
 #define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
@@ -33,6 +37,9 @@ void pdf_representation_inner(
     int kern_h = height / 2;
     int kern_w = width / 2;
 
+#ifdef TIMEDETAIL
+    long tTemp = HiResTime();
+#endif
     for(i=0; i < height; i++) {
         for(j=0; j < width; j++) {
             unsigned char bin_value_a, bin_value_b, bin_value_c;
@@ -51,6 +58,9 @@ void pdf_representation_inner(
         }
         pixels += pixel_skip;
     }
+#ifdef TIMEDETAIL
+    std::cout << "pdf_rep: " << (HiResTime()-tTemp) << "\n";
+#endif
 }
 
 void track_iter_inner(
@@ -79,6 +89,9 @@ void track_iter_inner(
     width = MIN(height, width); // Loop is limited to a circle with a diameter of height
     pixel_skip = (pixel_stride - width) * CHANNEL_COUNT;
 
+#ifdef TIMEDETAIL
+    long tTemp = HiResTime();
+#endif
     for(i=0; i < height; i++) {
         int norm_i = (i - centre);
         #ifdef USE_NEON
@@ -115,6 +128,10 @@ void track_iter_inner(
         }
         pixels += pixel_skip;
     }
+#ifdef TIMEDETAIL
+    std::cout << "iter_in: " << (HiResTime()-tTemp) << "\n";
+#endif
+
     #ifdef USE_NEON
     vst1q_lane_s32(& delta_x,newDeltas,0);
 		vst1q_lane_s32(& delta_y,newDeltas,1);
