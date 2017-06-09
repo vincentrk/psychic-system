@@ -26,7 +26,7 @@ int main(int argc, char ** argv)
         frame_capture = cv::VideoCapture( argv[1] );
     }
 
-#ifdef USE_DSP
+#ifdef DSP
     // Set up DSP
     Char8 * dspExecutable = argv[2];
     Char8 * strBufferSize = argv[3];
@@ -87,7 +87,7 @@ int main(int argc, char ** argv)
     #endif
     totalTimer.Pause();
 
-#ifdef USE_DSP
+#ifdef DSP
     // Stop DSP
     Uint8 processorId = 0;
     pool_notify_Delete (processorId);

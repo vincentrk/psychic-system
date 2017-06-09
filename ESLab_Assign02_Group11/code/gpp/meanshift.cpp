@@ -35,7 +35,7 @@ void print_mat_int(cv::Mat &mat)
 
 MeanShift::MeanShift()
 {
-#ifdef USE_DSP
+#ifdef DSP
     // We assume this for communicating with the DSP
     assert(sizeof(int)==4);
     assert(sizeof(int)==sizeof(int *));
@@ -62,7 +62,7 @@ void  MeanShift::Init_target_frame(const cv::Mat &frame,const cv::Rect &rect)
     kernel.convertTo(kernel, CV_32S);
     target_model = pdf_representation(frame,target_Region,0);
 
-#ifdef USE_DSP
+#ifdef DSP
     int * buf = pool_notify_GetBuf();
     unsigned int buf_size = pool_notify_GetSize();
 
@@ -185,7 +185,7 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
     int rect_y = target_Region.y - offset_y;
     int rect_x = target_Region.x - offset_x;
 
-#ifdef USE_DSP
+#ifdef DSP
     int * buf = pool_notify_GetBuf();
     unsigned int buf_size = pool_notify_GetSize();
 
