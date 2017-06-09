@@ -1,0 +1,6 @@
+pool_notifycfg.*
+pool_notifycfg_c.*
+*.cdb
+Debug/
+Release/
+

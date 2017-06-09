@@ -1,5 +1,6 @@
 #include "meanshift.h"
 #include "Timer.h"
+#include "pool_notify.h"
 #include <iostream>
 
 #ifndef ARMCC
@@ -14,16 +15,26 @@ int main(int argc, char ** argv)
     Timer trackTimer("Tracking Time");
 
     cv::VideoCapture frame_capture;
-    if(argc<2)
+    if(argc<4)
     {
         std::cout <<"specifiy an input video file to track" << std::endl;
-        std::cout <<"Usage:  ./" << argv[0] << " car.avi" << std::endl;
+        std::cout <<"Usage:  " << argv[0] << " car.avi meanshift.dsp buffersize" << std::endl;
         return -1;
     }
     else
     {
         frame_capture = cv::VideoCapture( argv[1] );
     }
+
+#ifdef USE_DSP
+    // Set up DSP
+    Char8 * dspExecutable = argv[2];
+    Char8 * strBufferSize = argv[3];
+    if (!pool_notify_Main(dspExecutable, strBufferSize)) {
+        std::cout << "Error setting up DSP" << std::endl;
+        return -1;
+    }
+#endif
 
     // this is used for testing the car video
     // instead of selection of object of interest using mouse
@@ -75,6 +86,12 @@ int main(int argc, char ** argv)
     MCPROF_STOP();
     #endif
     totalTimer.Pause();
+
+#ifdef USE_DSP
+    // Stop DSP
+    Uint8 processorId = 0;
+    pool_notify_Delete (processorId);
+#endif
 
     totalTimer.Print();
     readTimer.Print();

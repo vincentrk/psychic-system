@@ -1,0 +1,31 @@
+# kernel
+	// sum of all kernel elements = 1.0 (after normalisation)
+
+# pdf_representation
+	// sums kernel elements
+	// sum of pdf_model elements = 1.0
+
+# track
+	delta_x
+	delta_y
+	sum_wij
+
+	centre = height / 2
+
+	for row
+		norm_i
+		// (-1 <= norm_i <= 1)
+
+		for col
+			// (-1 <= norm_j)
+			// There is no upper limit, this depends on the aspect ratio of the box
+			// if norm_j > 1, calculation is skipped
+			if (norm_i^2 + norm_j^2 < 1)
+				// (-1 <= norm_j <= 1)
+				// (-1 <= norm_i <= 1)
+				// 0 <= bin_value <= 255/bin_width
+
+				weight = sqrt( prod{k}{ model_pdf(bin_value) / candidate_pdf(bin_value) } )
+				// weight <= sqrt(3 * model_pdf_max)
+				delta += norm * weight;
+				sum_wij += weight;

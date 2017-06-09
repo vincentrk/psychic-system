@@ -1,0 +1,16 @@
+# Original tracking time
+461.4 ms  (461.4 / 166 = 2.8 ms per iteration)
+
+# Tracking time with dsp called each iteration
+517.7 ms  (+56.3 / 166 = 0.34 ms per call)
+
+# Tracking time when writing 16k each iteration
+586.0 ms  (+68.3 / 166 = 0.41 ms per write)
+
+# Tracking time for 16k consumed by dsp (for sum)
+597.7 ms  (+80.0 / 166 = 0.48 ms per transfer)
+
+## DSP overhead for 16k input per iteration
+0.82 ms
+needs to be 2.8/(2.8-overhead) = 1.5x faster
+
