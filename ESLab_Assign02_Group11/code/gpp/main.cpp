@@ -105,7 +105,7 @@ int main(int argc, char ** argv)
     #ifdef ARMCC
     std::cout << "4bf41e5572f56bfedb3182781e24d4ac  is expected...\n";
     #else
-    std::cout << "051a524f68785b2f9c7fbb0754facb35  is expected...\n";
+    std::cout << "de8d2d93eb1b27101aa13dcd0be76d32  is expected...\n";
     #endif
     system("md5sum tracking_result.avi");
 
