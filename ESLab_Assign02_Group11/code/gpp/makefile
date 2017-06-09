@@ -13,7 +13,7 @@ CXXSRCS := main.cpp meanshift.cpp meanshift_portable.cpp pool_notify.cpp
 OBJS :=
 DEBUG :=
 LDFLAGS := -lpthread -lm --sysroot=/opt/rootfs
-CFLAGS := -DDSP --sysroot=/opt/rootfs
+CFLAGS := --sysroot=/opt/rootfs
 LIBS := -lopencv_core
 LIBS += -lopencv_imgproc
 LIBS += -lopencv_highgui
@@ -109,8 +109,9 @@ DEFS :=        -DOS_LINUX            \
                -DDA8XXGEM            \
                -DDA8XXGEM_PHYINTERFACE=SHMEM_INTERFACE \
                -DARMCC               \
-               -DDSP                 \
-
+               -DOPTIMAL             \
+#               -DDSP_MIMIC           \
+#               -DDSP                 \
 
 #   ----------------------------------------------------------------------------
 #   Compiler and Linker procedure

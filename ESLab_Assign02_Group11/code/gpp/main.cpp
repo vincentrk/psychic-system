@@ -27,6 +27,20 @@ int main(int argc, char ** argv)
     }
 
 #ifdef DSP
+	std::cout << "DSP: run on DSP\n";
+#else
+	std::cout << "run on ARM\n";
+#endif
+#ifdef OPTIMAL
+	std::cout << "OPTIMAL: Leaving out some error checking\n";
+#else
+	std::cout << "Runtime error checking enabled\n";
+#endif
+#ifdef DSP_MIMIC
+	std::cout << "DSP_MIMIC: keep code as close to DSP version as possible\n";
+#endif
+
+#ifdef DSP
     // Set up DSP
     Char8 * dspExecutable = argv[2];
     Char8 * strBufferSize = argv[3];
@@ -103,8 +117,6 @@ int main(int argc, char ** argv)
 
     } // Destroy writer to flush output to file
     #ifdef ARMCC
-    std::cout << "4bf41e5572f56bfedb3182781e24d4ac  is expected...\n";
-    #else
     std::cout << "de8d2d93eb1b27101aa13dcd0be76d32  is expected...\n";
     #endif
     system("md5sum tracking_result.avi");

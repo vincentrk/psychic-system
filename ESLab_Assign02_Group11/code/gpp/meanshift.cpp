@@ -60,7 +60,7 @@ void  MeanShift::Init_target_frame(const cv::Mat &frame,const cv::Rect &rect)
     float kernel_sum = Epanechnikov_kernel(kernel, rect.height, rect.width);
     kernel *= INT_MAX / kernel_sum; // pre-scale kernel
     kernel.convertTo(kernel, CV_32S);
-    target_model = pdf_representation(frame,target_Region,0);
+    target_model = pdf_representation(frame,target_Region);
 
 #ifdef DSP
     int * buf = pool_notify_GetBuf();
@@ -98,8 +98,9 @@ void  MeanShift::Init_target_frame(const cv::Mat &frame,const cv::Rect &rect)
         std::cerr << "DSP error code " << buf[1] << "\n";
         throw std::runtime_error("DSP error");
     }
+#endif
 
-#else
+#ifdef DSP_MIMIC
     frame_cut = (unsigned char *) malloc(rect.height * rect.width * 9 * CHANNEL_COUNT);
     if (frame_cut == NULL) {
         std::cerr << "Could not allocate frame_cut buffer\n";
@@ -149,16 +150,18 @@ float  MeanShift::Epanechnikov_kernel(cv::Mat &kernel, int h, int w)
     return kernel_sum;
 }
 
-cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect, const float init)
+cv::Mat MeanShift::pdf_representation(const cv::Mat &frame, const cv::Rect &rect)
 {
-    cv::Mat pdf_model(CHANNEL_COUNT,cfg.num_bins,CV_32S,cv::Scalar(init));
+    cv::Mat pdf_model(CHANNEL_COUNT,cfg.num_bins,CV_32S,cv::Scalar(0));
 
+#ifndef OPTIMAL
     if (!kernel.isContinuous()) {
         throw std::runtime_error("Error: kernel is not continuous");
     }
     if (!frame.isContinuous()) {
         throw std::runtime_error("Error: frame is not continuous");
     }
+#endif
 
     pdf_representation_inner(
         rect.height,
@@ -187,12 +190,15 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
 
 #ifdef DSP
     int * buf = pool_notify_GetBuf();
+    
+	#ifndef OPTIMAL
     unsigned int buf_size = pool_notify_GetSize();
-
     if ( (unsigned int) (5 * sizeof(int) + size_y * size_x * CHANNEL_COUNT * sizeof(char)) > buf_size) {
         std::cerr << "Need buffer of " << (5 * sizeof(int) + size_y * size_x * CHANNEL_COUNT * sizeof(char)) << "B\n";
         throw std::runtime_error("DSP buffer too small for pixel data");
     }
+	#endif
+
     buf[0] = MEANSHIFT_MSG_TRACK;
     buf[1] = rect_y;
     buf[2] = rect_x;
@@ -215,18 +221,26 @@ cv::Rect MeanShift::track(const cv::Mat &next_frame)
     rect_y = buf[1];
     rect_x = buf[2];
 #else
+
+	#ifdef DSP_MIMIC
     for (int y=0; y<size_y; y++) {
         memcpy(
             frame_cut + size_x * CHANNEL_COUNT * y,
             next_frame.ptr<cv::Vec3b>(offset_y + y) + offset_x,
             size_x * CHANNEL_COUNT);
     }
+	#endif
 
     track_inner(
         target_Region.height,
         target_Region.width,
+	#ifdef DSP_MIMIC
         frame_cut,
         size_x,
+	#else
+		(unsigned char *) (next_frame.ptr<cv::Vec3b>(offset_y) + offset_x),
+        next_frame.cols,
+	#endif
         kernel.ptr<int>(0),
         kernel.cols,
         target_model.ptr<int>(0),
