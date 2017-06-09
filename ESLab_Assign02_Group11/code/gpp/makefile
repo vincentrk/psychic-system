@@ -110,7 +110,7 @@ DEFS :=        -DOS_LINUX            \
                -DDA8XXGEM_PHYINTERFACE=SHMEM_INTERFACE \
                -DARMCC               \
                -DOPTIMAL             \
-							 -DUSE_NEON							\
+               -DUSE_NEON            \
 #               -DDSP_MIMIC           \
 #               -DDSP                 \
 
