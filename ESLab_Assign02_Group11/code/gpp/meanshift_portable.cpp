@@ -3,6 +3,9 @@
 #include <string.h>
 #include <math.h>
 #include "meanshift_portable.h"
+#ifdef USE_NEON
+#include <arm_neon.h>
+#endif //USE_NEON
 
 #ifndef DSP_COMPILER
 #include <iostream>
@@ -67,6 +70,10 @@ void track_iter_inner(
     int delta_x = 0;
     int delta_y = 0;
     int sum_wij = 0;
+    #ifdef USE_NEON
+    int32x4_t preWeights = vsetq_lane_s32(1,preWeights,2);
+    int32x4_t newDeltas = vdupq_n_s32(0);
+    #endif //USE_NEON
     int centre = ((height-1)/2); // Half pixel error
 
     width = MIN(height, width); // Loop is limited to a circle with a diameter of height
@@ -74,11 +81,17 @@ void track_iter_inner(
 
     for(i=0; i < height; i++) {
         int norm_i = (i - centre);
+        #ifdef USE_NEON
+        preWeights = vsetq_lane_s32(norm_i,preWeights,1);
+        #endif //USE_NEON
         int norm_i_sqr = norm_i * norm_i;
         for(j=0; j < width; j++) {
             int norm_j = (j-centre);
             if (norm_i_sqr + norm_j * norm_j <= centre * centre) {
                 // calculate element of weight matrix (CalWeight)
+                #ifdef USE_NEON
+                preWeights = vsetq_lane_s32(norm_j,preWeights,0);
+                #endif //USE_NEON
                 unsigned char bin_value_a, bin_value_b, bin_value_c;
                 int weight;
                 bin_value_a = (*(pixels + 0)) >> bin_width_pow;
@@ -88,14 +101,25 @@ void track_iter_inner(
                           ratio_a[bin_value_a]
                         * ratio_b[bin_value_b]
                         * ratio_c[bin_value_c]);
+
+
+                #ifdef USE_NEON
+                newDeltas = vaddq_s32(vmulq_s32(vdupq_n_s32(weight),preWeights),newDeltas);
+                #else
                 delta_x += norm_j * weight;
                 delta_y += norm_i * weight;
                 sum_wij += weight;
+                #endif //USE_NEON
             }
             pixels += CHANNEL_COUNT;
         }
         pixels += pixel_skip;
     }
+    #ifdef USE_NEON
+    vst1q_lane_s32(& delta_x,newDeltas,0);
+		vst1q_lane_s32(& delta_y,newDeltas,1);
+		vst1q_lane_s32(& sum_wij,newDeltas,2);
+    #endif //USE_NEON
     *result_y = (delta_y/sum_wij);
     *result_x = (delta_x/sum_wij);
 }
@@ -193,4 +217,3 @@ void track_inner(
         }
     }
 }
-

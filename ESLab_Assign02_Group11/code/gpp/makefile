@@ -9,7 +9,7 @@ DSPLINK := /opt/bbToolChain/usr/local/share/bbframework/platform/beagle-linux/to
 #   ----------------------------------------------------------------------------
 #   General options, sources and libraries
 #   ----------------------------------------------------------------------------
-CXXSRCS := main.cpp meanshift.cpp meanshift_portable.cpp pool_notify.cpp 
+CXXSRCS := main.cpp meanshift.cpp meanshift_portable.cpp pool_notify.cpp
 OBJS :=
 DEBUG :=
 LDFLAGS := -lpthread -lm --sysroot=/opt/rootfs
@@ -33,7 +33,7 @@ BIN := meanshift.gpp
 OBJDIR_DXX := Debug
 BINDIR_D := $(OBJDIR_DXX)
 LIBS_D := $(DSPLINK)/gpp/BUILD/EXPORT/DEBUG/dsplink.lib $(LIBS)
-# If the DSP/Link was rebuilt by the user, replace the line above 
+# If the DSP/Link was rebuilt by the user, replace the line above
 # with the one below to use the updated libraries
 #LIBS_D := $(DSPLINK)/gpp/BUILD/EXPORT/DEBUG/dsplink.lib $(LIBS)
 OBJS_D := $(CXXSRCS:%.cpp=$(OBJDIR_DXX)/%.o)
@@ -45,13 +45,13 @@ ALL_DEBUG := -g -DDDSP_DEBUG $(DEBUG) -D__DEBUG -DDEBUG
 OBJDIR_RXX := Release
 BINDIR_R := $(OBJDIR_RXX)
 #LIBS_R := $(DSPLINK)/gpp/export/BIN/Linux/OMAPL1XX/RELEASE/dsplink.lib $(LIBS)
-# If the DSP/Link was rebuilt by the user, replace the line above 
+# If the DSP/Link was rebuilt by the user, replace the line above
 # with the one below to use the updated libraries
 LIBS_R := $(DSPLINK)/gpp/BUILD/EXPORT/RELEASE/dsplink.lib $(LIBS)
 OBJS_R := $(CXXSRCS:%.cpp=$(OBJDIR_RXX)/%.o)
 
 #   ----------------------------------------------------------------------------
-#   Compiler include directories 
+#   Compiler include directories
 #   ----------------------------------------------------------------------------
 INCLUDES := -I$(DSPLINK)/gpp/inc                   \
             -I$(DSPLINK)/gpp/inc/usr               \
@@ -86,7 +86,7 @@ ALL_CFLAGS := $(INCLUDES)                   \
               $(CFLAGS)
 
 #   ----------------------------------------------------------------------------
-#   Compiler symbol definitions 
+#   Compiler symbol definitions
 #   ----------------------------------------------------------------------------
 
 DEFS :=        -DOS_LINUX            \
@@ -110,6 +110,7 @@ DEFS :=        -DOS_LINUX            \
                -DDA8XXGEM_PHYINTERFACE=SHMEM_INTERFACE \
                -DARMCC               \
                -DOPTIMAL             \
+							 -DUSE_NEON							\
 #               -DDSP_MIMIC           \
 #               -DDSP                 \
 
@@ -121,7 +122,7 @@ DEFS :=        -DOS_LINUX            \
 all: Debug Release
 
 #   ----------------------------------------------------------------------------
-#   Building Debug... 
+#   Building Debug...
 #   ----------------------------------------------------------------------------
 .PHONY: Debug
 Debug: $(BINDIR_D)/$(BIN)
@@ -134,7 +135,7 @@ $(OBJDIR_DXX)/%.o : %.cpp
 	$(BASE_TOOLCHAIN)/bin/$(CXX) $(ALL_DEBUG) $(DEFS) $(ALL_CFLAGS) -o$@ $<
 
 #   ----------------------------------------------------------------------------
-#   Building Release... 
+#   Building Release...
 #   ----------------------------------------------------------------------------
 .PHONY: Release
 Release: $(BINDIR_R)/$(BIN)
