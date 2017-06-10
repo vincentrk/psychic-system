@@ -116,6 +116,18 @@ DEFS :=        -DOS_LINUX            \
 #               -DDSP_MIMIC           \
 #               -DDSP                 \
 
+.PHONY: dsp
+dsp: DEFS += -DDSP -DFIXEDPOINT
+dsp: Release
+
+.PHONY: neon
+neon: DEFS += -DUSE_NEON -DFIXEDPOINT
+neon: Release
+
+.PHONY: fixedpoint
+fixedpoint: DEFS += -DFIXEDPOINT
+fixedpoint: Release
+
 #   ----------------------------------------------------------------------------
 #   Compiler and Linker procedure
 #   From this point and on changes are very unlikely.

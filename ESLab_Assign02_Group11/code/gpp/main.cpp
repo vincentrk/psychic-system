@@ -11,36 +11,55 @@
 
 int main(int argc, char ** argv)
 {
+#ifdef FIXEDPOINT
+    std::cout << "Number format : fixed point\n";
+#else
+    std::cout << "Number format : floating point\n";
+#endif
+#ifdef DSP
+	std::cout << "DSP : yes\n";
+#else
+	std::cout << "DSP : no\n";
+#endif
+#ifdef USE_NEON
+	std::cout << "NEON : yes\n";
+#else
+    std::cout << "NEON : no\n";
+#endif
+#ifdef OPTIMAL
+	std::cout << "Extra runtime error checking : no\n";
+#else
+	std::cout << "Extra runtime error checking : yes\n";
+#endif
+#ifdef DSP_MIMIC
+	std::cout << "DSP_MIMIC: keep code as close to DSP version as possible\n";
+#endif
+
     Timer totalTimer("Total Time");
     Timer readTimer("Reading Time");
     Timer writeTimer("Writing Time");
     Timer trackTimer("Tracking Time");
 
     cv::VideoCapture frame_capture;
+#ifdef DSP
     if(argc<4)
     {
         std::cout <<"specifiy an input video file to track" << std::endl;
         std::cout <<"Usage:  " << argv[0] << " car.avi meanshift.dsp buffersize" << std::endl;
         return -1;
     }
+#else
+    if(argc<2)
+    {
+        std::cout <<"specifiy an input video file to track" << std::endl;
+        std::cout <<"Usage:  " << argv[0] << " car.avi" << std::endl;
+        return -1;
+    }
+#endif
     else
     {
         frame_capture = cv::VideoCapture( argv[1] );
     }
-
-#ifdef DSP
-	std::cout << "DSP: run on DSP\n";
-#else
-	std::cout << "run on ARM\n";
-#endif
-#ifdef OPTIMAL
-	std::cout << "OPTIMAL: Leaving out some error checking\n";
-#else
-	std::cout << "Runtime error checking enabled\n";
-#endif
-#ifdef DSP_MIMIC
-	std::cout << "DSP_MIMIC: keep code as close to DSP version as possible\n";
-#endif
 
 #ifdef DSP
     // Set up DSP
