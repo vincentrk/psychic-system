@@ -19,6 +19,9 @@ Each version is further described in our report.
 	'make neon'
 		compiles our fastest and final solution (NEON).
 
-	In addition there are several defines in the makefile under the gpp folder that add and remove functionality within the code.
-		-DOPTIMAL Switch this flag out to enable extra error checking on the continuity of the kernel
-		-DTIMEDETAIL Switch this flag in to enable extra timing analysis of the pdf representation function separately
+In addition there are several defines in the makefile under the gpp folder 
+that add and remove functionality within the code.
+	-DOPTIMAL Switch this flag out to enable extra error checking on the 
+		continuity of the kernel
+	-DTIMEDETAIL Switch this flag in to enable extra timing analysis of the pdf
+		representation function separately
