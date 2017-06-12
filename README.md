@@ -17,6 +17,7 @@ TU Delft IN4342 - Embedded Systems Lab
 
 ## Link to Overleaf
 [REPORT ASSIGNMENT 02](https://www.overleaf.com/9529805tfmgpcsshcry)
+
 [PRESENTATION ASSIGNMENT 02](https://www.overleaf.com/9928537yyvcjcjjfjcp)
 ## Git
 Please set your e-mail address when you clone the repo to the server.  
